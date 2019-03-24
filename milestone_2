@@ -1,0 +1,56 @@
+Brian Heath
+Chris Niemeyer
+Venkata Sai Nikhil Thodupunuri
+Hemanth Kothapalli
+
+Motivation for the Idea
+
+As a sport that began in the late 16th century that has many unique rules and terminology, cricket offers good existing interesting statistical information that lends itself to a database project. We wanted to find a topic that has good robust datasets as well as be compelling to all our team members. For two of our Indian team members, cricket is practically the national sport in terms of popularity and offers intrigue to them as life long fans. For our American team members, it is a great opportunity to learn about a popular international sport as well as gain insight into a very important aspect of Indian culture. 
+
+Data Sources
+
+Data Repositories
+
+I.	IPL Cricket Data from Kaggle
+A.	https://www.kaggle.com/raghu07/ipl-datatill-2016
+B.	https://www.kaggle.com/raghu07/ipl-data-till-2017
+II.	Cric Sheets 
+A.	https://cricsheet.org/
+III.	ESPN Cricket Scraped Data
+A.	Player Profiles
+B.	Player Stats
+C.	Images
+
+Challenges
+
+●	
+
+Relational Schema
+
+Player (ID, Name, Short_Name, DOB, Bat_Handedness, Bowl_Skill, Country_Name)
+Team (ID, Name, Home)
+Player_to_Team (Team_ID, Player_ID, Year, P_to_T_ID)
+	FK- Team_ID references Team.ID, Player_ID references Player.ID
+Match (Match_ID, Team_1, Team_2, Date, Year, Venue, City, Country, Toss_Winner, Match_Winner, Toss_Decision, Win_Type, Outcome, Player_of_the_Match)
+	FK- Player_of_the_Match references Player.ID
+Ball_to_Ball (Match_ID, Over_ID, Ball_ID, Innings_no, team_batting_ID, team_bowling_ID,
+striker_ID, Non-striker_ID,  Bowler_ID, Extras_type, Extras_Score, Batsman_Score, 
+Output_type)
+
+Application Features
+
+Definite
+
+Probable
+
+Technologies
+
+Database Engines :- MySql, Mongo
+Servers: Python( Django)
+Front-end (AngularJs, Bootstrap) 
+Hosting : AWS (Server and Database Engines)
+
+Member Responsibilities
+
+
+
