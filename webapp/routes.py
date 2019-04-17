@@ -6,8 +6,22 @@ from Code.Analyzer import *
 from Twitter.twitter_searcher import *
 from os import listdir
 import datetime
+from flask.ext.mysql import MySQL
+from werkzeug import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+
+mysql = MySQL()
+app.config['MYSQL_DATABASE_USER'] = 'root'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'Cricket1234!'
+app.config['MYSQL_DATABASE_DB'] = 'cricketdb'
+app.config['MYSQL_DATABASE_HOST'] = 'cricketdb.cpemtivwfnzb.us-east-1.rds.amazonaws.com'
+mysql.init_app(app)
+
+conn = mysql.connect()
+cursor = conn.cursor()
+print(cursor)
+
 
 #  The main view of CryptoGuru Invemestment Analyzer
 @app.route('/', methods = ['GET', 'POST'])
