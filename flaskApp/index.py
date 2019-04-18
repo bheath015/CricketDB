@@ -75,7 +75,13 @@ def addEntry(username, password, email):
 	cursor.execute(sql, (username, password, email))
 	addUserConnector.commit()
 
+def getTeamsList():
+	cursor = cnx.cursor()
+	return getTeamsQuery(cursor)
 
+def getPlayersOnRoster(team):
+	cursor = cnx.cursor()
+	return getPlayersOnRosterQuery(cursor, team)
 
 app = Flask(__name__)
 
@@ -142,7 +148,16 @@ def registerPage():
 	return render_template('login.html', message="User created")
 
 
-
+@app.route("/team")
+def teamPage():
+	teams_list = getTeamsList()
+	team = "Gujarat Lions"
+	roster = getPlayersOnRoster("Gujarat Lions")
+	message = {}
+	message['team_list'] = teams_list
+	message['roster'] = roster
+	message['team_name'] = team
+	return render_template('team.html', len=len(roster), message=message)
 
 
 

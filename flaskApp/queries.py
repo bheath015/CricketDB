@@ -8,6 +8,8 @@ WICKETS_STAT_QUERY = "select `name`, score  from team join (SELECT inn.`bowlingT
 TOP_FIVE_BAT_PLAYERS = "select btb.strikerID, p.name, sum(btb.batsmanScore) as score  from ballToBall btb join player p on btb.`strikerID` = p.`id` group by btb.strikerID, p.name order by sum(btb.batsmanScore) desc limit 5;"
 TEAM_HISTORY = "select playerId, `year`, `name` from playerToTeam  join team on id = teamId where playerId in ####LIST#### order by playerId asc, `year` desc, teamId asc;"
 OVER_YEAR_STATS = "select overid, `year`, avg(score) as avScore from (select b.matchid, b.overid, b.inningsno, Sum(b.batsmanscore) + COALESCE(Sum(be.extraruns), 0) AS score from ballToBall b left join ballExtra be on be.matchid = b.matchid AND be.overid = b.overid AND be.ballid = b.ballid AND be.inningsno = b.inningsno GROUP BY b.matchid, b.overid, b.inningsno) matchStats join `match` m on m.`matchID` = matchStats.matchid group by overid, `year`";
+TEAM_NAMES_QUERY = "select `name` from team;";
+TEAM_ROSTER_QUERY = "select p.name from player p left join playerToTeam pt on p.id = pt.playerId left join team t on t.`id` = pt.`teamId` where pt.year = 2017 and t.name = \"{}\" order by p.name;";
 
 
 COLOR_CODES = {}
@@ -130,3 +132,12 @@ def getWicketsAvgPerTeam(cursor):
 
 	return teamWiseAvgData
 
+
+def getTeamsQuery(cursor):
+	cursor.execute(TEAM_NAMES_QUERY)
+	return [team[0] for team in cursor]
+
+def getPlayersOnRosterQuery(cursor, team):
+	print(TEAM_ROSTER_QUERY.format(team))
+	cursor.execute(TEAM_ROSTER_QUERY.format(team))
+	return [player[0] for player in cursor]
