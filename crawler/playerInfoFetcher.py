@@ -7,6 +7,7 @@ from lxml import html
 import requests
 #from BeautifulSoup import BeautifulSoup
 from lxml import html
+import lxml.html
 import time
 from multiprocessing.dummy import Pool as ThreadPool
 
@@ -72,6 +73,22 @@ def getPlayerBorn(tree):
 	spanElement = tree.xpath(xpath)
 	return spanElement[0].text
 
+def getMajorTeams(tree):
+	xpath = '//p[@class="ciPlayerinformationtxt"]/b[contains(text(),"Major teams")]/../span'
+	spanElement = tree.xpath(xpath)
+	return spanElement[0].text
+
+def getTableDataBatting(tree):
+	xpath = '//div[@class="pnl490M"]//table[@class="engineTable"][1]'
+	tableElement = tree.xpath(xpath)
+	return lxml.html.tostring(tableElement[0])
+
+def getTableDataBowling(tree):
+	xpath = '//div[@class="pnl490M"]//table[@class="engineTable"][2]'
+	tableElement = tree.xpath(xpath)
+	return lxml.html.tostring(tableElement[0])
+
+
 def getPlayerAge(tree):
 	xpath = '//p[@class="ciPlayerinformationtxt"]/b[contains(text(),"Current age")]/../span'
 	spanElement = tree.xpath(xpath)
@@ -96,6 +113,9 @@ def loadPlayerData(name):
 	born = None
 	age = None
 	country = None
+	battingData = None
+	bowlingData = None
+	majorTeams = None
 
 	try:
 		fullName = getPlayerName(tree).strip()
@@ -137,6 +157,22 @@ def loadPlayerData(name):
 	except:
 		age = ""
 
+	try:
+		majorTeams = getMajorTeams(tree).strip()
+	except:
+		majorTeams = ""
+
+	try:
+		battingData = getTableDataBatting(tree).strip()
+	except:
+		battingData = ""
+
+	try:
+		bowlingData = getTableDataBowling(tree).strip()
+	except:
+		bowlingData = ""
+
+
 	dataDetails = {}
 	dataDetails["fullName"] = fullName
 	dataDetails["imageLink"] = imageLink
@@ -146,6 +182,9 @@ def loadPlayerData(name):
 	dataDetails["born"] = born
 	dataDetails["age"] = age
 	dataDetails["link"] = urlLink
+	dataDetails["battingData"] = battingData
+	dataDetails["bowlingData"] = bowlingData
+	dataDetails["majorTeams"] = majorTeams
 
 	return dataDetails
 
@@ -180,7 +219,7 @@ for i in range(len(shortNames)):
 
 stringData = json.dumps(completeDetails)
 
-jsonFile = open("pDetails.json", "w")
+jsonFile = open("pDetails_itr2.json", "w")
 jsonFile.write(stringData)
 jsonFile.close()
 

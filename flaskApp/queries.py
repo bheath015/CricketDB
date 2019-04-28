@@ -8,6 +8,8 @@ WICKETS_STAT_QUERY = "select `name`, score  from team join (SELECT inn.`bowlingT
 TOP_FIVE_BAT_PLAYERS = "select btb.strikerID, p.name, sum(btb.batsmanScore) as score  from ballToBall btb join player p on btb.`strikerID` = p.`id` group by btb.strikerID, p.name order by sum(btb.batsmanScore) desc limit 5;"
 TEAM_HISTORY = "select playerId, `year`, `name` from playerToTeam  join team on id = teamId where playerId in ####LIST#### order by playerId asc, `year` desc, teamId asc;"
 OVER_YEAR_STATS = "select overid, `year`, avg(score) as avScore from (select b.matchid, b.overid, b.inningsno, Sum(b.batsmanscore) + COALESCE(Sum(be.extraruns), 0) AS score from ballToBall b left join ballExtra be on be.matchid = b.matchid AND be.overid = b.overid AND be.ballid = b.ballid AND be.inningsno = b.inningsno GROUP BY b.matchid, b.overid, b.inningsno) matchStats join `match` m on m.`matchID` = matchStats.matchid group by overid, `year`";
+PLAYER_LIST_QUERY = "select * from player"
+
 
 
 COLOR_CODES = {}
@@ -129,4 +131,66 @@ def getWicketsAvgPerTeam(cursor):
 		teamWiseAvgData.append(entry)
 
 	return teamWiseAvgData
+
+
+
+def getPlayerDetails(cursor, pid):
+	## do mongo stuff
+	playerInfo = getPlayerList(cursor)
+	playerDetails = playerInfo[pid]
+	return playerDetails
+
+
+def getPlayerList(cursor):
+	cursor.execute(PLAYER_LIST_QUERY)
+	playerInfo = {}
+	for (pid, name, shortName, dob, batHand, bowlSkill) in cursor:
+		entry = {}
+		entry["pid"] = pid
+		entry["name"] = name
+		entry["shortName"] = shortName
+		entry["dob"] = dob
+		entry["batHand"] = batHand
+		entry["bowlSkill"] = bowlSkill
+		playerInfo[pid] = entry
+
+	return playerInfo
+
+
+
+def insertFavPlayer(cursor, username, player):
+	print username
+	rows_count = cursor.execute('select * from favRecords where username="%s";' % username)
+	rs = cursor.fetchall()
+	if(len(rs) > 0):
+		entry = rs[0]
+		cursor.execute('update favRecords set playerId=%s where username="%s"' % (player, username))
+	else:
+		cursor.execute("insert into favRecords (username, playerId) values (%s,%s)", (username, player))
+	return
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

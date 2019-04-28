@@ -144,20 +144,20 @@ print len(matchLinks)
 
 
 playerDicts = {}
-playerDictsParallel = calculateParallel(getScoreCardPlayers,matchLinks)
-playerDicts = mergeDicts(playerDictsParallel)
+# playerDictsParallel = calculateParallel(getScoreCardPlayers,matchLinks)
+# playerDicts = mergeDicts(playerDictsParallel)
 
-# for matchLink in matchLinks:
-#  	currentDict = getScoreCardPlayers(matchLink)
-#  	playerDicts = mergeDicts([playerDicts, currentDict])
-#  	print "Extracted player count", len(playerDicts.keys())
-# 	time.sleep(0.5)
+for matchLink in matchLinks:
+ 	currentDict = getScoreCardPlayers(matchLink)
+ 	playerDicts = mergeDicts([playerDicts, currentDict])
+ 	print "Extracted player count", len(playerDicts.keys())
+	time.sleep(0.5)
 
-import csv
+# import csv
 
-w = csv.writer(open("players.csv", "w"))
-for key, val in playerDicts.items():
-	w.writerow([key, val])
+# w = csv.writer(open("players.csv", "w"))
+# for key, val in playerDicts.items():
+# 	w.writerow([key, val])
 
 
 

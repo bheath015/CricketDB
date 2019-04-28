@@ -1,19 +1,16 @@
 import json
+import pymongo
 
-fp = open("players.csv");
-
-playersData = {}
-for line in fp:
-	entries = line.split(",")
-	playername = entries[0].strip()
-	jsonString = entries[1].strip()
-	jsonString = jsonString.replace("'", '"')
-	struct = json.loads(jsonString)
-	playersData[playername] = struct
+myclient = pymongo.MongoClient("mongodb://ec2-52-205-35-60.compute-1.amazonaws.com:27017/")
+mydb = myclient["cricket"]
+mycol = mydb["player"]
 
 
+fp = open("pDetails_itr2.json", "r");
+data = fp.read()
+jsonData = json.loads(data);
+entryKeys = jsonData.keys()
 
-
-
-print playersData
-
+for key in entryKeys:
+	value = jsonData[key]
+	mycol.insert_one(value)

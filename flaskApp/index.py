@@ -8,27 +8,16 @@ from flask import request
 from flask import Flask, session, redirect, url_for, escape, request
 from queries import *
 
+import pymongo
 
+myclient = pymongo.MongoClient("mongodb://ec2-52-205-35-60.compute-1.amazonaws.com:27017/")
+mydb = myclient["cricket"]
+mycol = mydb["player"]
 
 
 cnx = mysql.connector.connect(user='root', database='cricketdb', host="cricketdb.cpemtivwfnzb.us-east-1.rds.amazonaws.com", passwd="Cricket1234!")
 
 
-def getPlayerList():
-	cursor = cnx.cursor()
-	cursor.execute(PLAYER_DATA_QUERY)
-	playerData = {}
-	for (playerId, playerName, playerShortName, playerDob, playerBat, playerBowl) in cursor:
-		entry = {}
-		entry["playerId"] = playerId
-		entry["playerName"] = playerName
-		entry["playerShortName"] = playerShortName
-		entry["playerDob"] = playerDob
-		entry["playerBat"] = playerBat
-		entry["playerBowl"] = playerBowl
-		playerData[playerId] = entry
-
-	return playerData
 
 def getUserNameList():
 	cursor = cnx.cursor()
@@ -69,11 +58,80 @@ def getOverYearHistoryStats():
 
 
 def addEntry(username, password, email):
-	addUserConnector = mysql.connector.connect(user='root', database='cricketdb', host="cricketdb.cpemtivwfnzb.us-east-1.rds.amazonaws.com", passwd="Cricket1234!")
-	cursor = addUserConnector.cursor()
+	#addUserConnector = mysql.connector.connect(user='root', database='cricketdb', host="cricketdb.cpemtivwfnzb.us-east-1.rds.amazonaws.com", passwd="Cricket1234!")
+	cursor = cnx.cursor()
 	sql = "INSERT INTO user VALUES (%s, %s,%s)"
 	cursor.execute(sql, (username, password, email))
-	addUserConnector.commit()
+	cnx.commit()
+
+
+
+def getplayerInfoStats(playerid):
+	cursor = cnx.cursor()
+	playerDetails = getPlayerDetails(cursor, playerid)
+	return playerDetails
+
+
+def getPlayerListStats():
+	cursor = cnx.cursor()
+	playerInfo = getPlayerList(cursor)
+	return playerInfo
+
+
+def getPlayerAutoCompleteData():
+	cursor = cnx.cursor()
+	playerInfo = getPlayerList(cursor)
+	playerData = []
+	for key in playerInfo.keys():
+		entry = {}
+		entry["label"] = playerInfo[key]["name"]
+		entry["category"] = ""
+		entry["pid"] = key
+		playerData.append(entry)
+
+	return playerData
+
+
+def getPlayerMongoDetails(fullName):
+	query = {} 
+	query["fullName"]= fullName
+	data = []
+	for entry in mycol.find(query):
+		data.append(entry)
+	data[0]["bowlingData"] = data[0]["bowlingData"].replace('<table class="engineTable">', '<table class = "table table-bordered">')
+	data[0]["battingData"] = data[0]["battingData"].replace('<table class="engineTable">', '<table class = "table table-bordered">')
+
+	
+	return data[0];
+
+def getAllMongoDetails():
+	query = {} 
+	data = {}
+	project = {}
+	project["_id"] = 0
+	for entry in mycol.find(query, project):
+		data[entry["fullName"]] = entry
+	return data
+
+
+
+def addFavPlayerInDb(username, playerid):
+	#addFavPlayerConnector = mysql.connector.connect(user='root', database='cricketdb', host="cricketdb.cpemtivwfnzb.us-east-1.rds.amazonaws.com", passwd="Cricket1234!")
+	cursor = cnx.cursor(buffered=True)
+	insertFavPlayer(cursor, username, playerid)
+	cnx.commit()
+
+def getFavPlayer(username):
+	cursor = cnx.cursor()
+	cursor.execute('select * from favRecords where username="%s"'% username )
+	rs = cursor.fetchall()
+	print rs
+	if(len(rs) == 0):
+		return {"playerid": None}
+
+	entry = {}
+	entry["playerid"] = str(rs[0][1])
+	return entry
 
 
 
@@ -81,10 +139,31 @@ app = Flask(__name__)
 
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
+@app.route("/addFavPlayer")
+def addFavPlayerApi():
+	if 'username' not in session:
+		return redirect("/loginpage")
+	if(request.args.get('playerid') is None):
+		return jsonify({})
+	username = session["username"]
+	playerId = int(request.args.get('playerid'))
+	addFavPlayerInDb(username, playerId)
+	return jsonify({})
+
+
+
+@app.route("/getFavPlayer")
+def getFavPlayerRoute():
+	if 'username' not in session:
+		return redirect("/loginpage")
+	username = session["username"]
+	data = getFavPlayer(username)
+	return jsonify(data)
+
 
 @app.route("/getPlayerList")
 def playerListApi():
-    playerData = getPlayerList();
+    playerData = getPlayerListStats();
     return jsonify(playerData)
 
 
@@ -124,6 +203,39 @@ def logout():
 	return redirect('/loginpage')
 
 
+@app.route("/maketeam")
+def maketeam():
+	if 'username' not in session:
+		return redirect("/loginpage")
+	username = session["username"]
+	data = {}
+	data["username"] = username
+	data['playerInfoList'] = getPlayerListStats()
+	data['playerAutoComplete'] = getPlayerAutoCompleteData()
+	data['allMongo'] = getAllMongoDetails()
+	return render_template('team.html', message = data)
+
+
+
+
+@app.route("/playerprofile")
+def getPlayerProfilePage():
+	if 'username' not in session:
+		return redirect("/loginpage")
+	username = session["username"]
+	data = {}
+	data["username"] = username
+	data['playerInfoList'] = getPlayerListStats()
+	data['playerAutoComplete'] = getPlayerAutoCompleteData()
+	if(request.args.get('playerid') is None):
+		return render_template("profile.html", message = data)
+	playerId = int(request.args.get('playerid'))
+	data['playerInfo'] = getplayerInfoStats(playerId)
+	playerName = data['playerInfo']['name']
+	data['mongoInfo'] = getPlayerMongoDetails(playerName)
+	return render_template("profile.html", message = data)
+
+
 
 @app.route("/register")
 def registerPage():
@@ -131,21 +243,13 @@ def registerPage():
 	password = request.args["password"]
 	email = request.args["email"]
 
-
 	userData, emailList = getUserNameList()
 	if(username in userData or email in emailList):
 		return render_template('login.html', message="Username/Email already exists")
 
 	addEntry(username, password, email)
 
-
 	return render_template('login.html', message="User created")
-
-
-
-
-
-
 
 
 

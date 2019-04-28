@@ -1533,9 +1533,11 @@
 				];
 				$( "#search" ).catcomplete({
 					delay: 0,
-					source: data
+					source: data,
+					
 				});
-				
+
+				$( "#search" ).on( "autocompleteselect", function( event, ui ) { console.log("Came Temp");} );
 				
 				//tooltips
 				$( "#show-option" ).tooltip({
