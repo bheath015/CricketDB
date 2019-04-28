@@ -257,9 +257,6 @@ def registerPage():
 
 	return render_template('login.html', message="User created")
 
-
-@app.route("/team")
-
 team_image_dict = {
 	'Royal Challengers Bangalore': 'https://a.espncdn.com/i/teamlogos/cricket/500/335970.png',
 	'Kolkata Knight Riders': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Kolkata_Knight_Riders_Logo.svg/800px-Kolkata_Knight_Riders_Logo.svg.png',
@@ -274,8 +271,10 @@ team_image_dict = {
 	'Rising Pune Supergiants': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
 	'Chennai Super Kings': 'https://a.espncdn.com/i/teamlogos/cricket/500/335974.png',
 	'Pune Warriors': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png',
-	'Mumbai Indians': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png',
+	'Mumbai Indians': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png'
 }
+
+@app.route("/team")
 def teamPage():
 	teams_list = getTeamsList()
 	team = "Gujarat Lions"
