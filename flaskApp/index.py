@@ -149,6 +149,23 @@ def registerPage():
 
 
 @app.route("/team")
+
+team_image_dict = {
+	'Royal Challengers Bangalore': 'https://a.espncdn.com/i/teamlogos/cricket/500/335970.png',
+	'Kolkata Knight Riders': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Kolkata_Knight_Riders_Logo.svg/800px-Kolkata_Knight_Riders_Logo.svg.png',
+	'Rajasthan Royals': 'https://a.espncdn.com/i/teamlogos/cricket/500/335977.png',
+	'Rising Pune Supergiant': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
+	'Kochi Tuskers Kerala': 'https://upload.wikimedia.org/wikipedia/en/thumb/9/96/Kochi_Tuskers_Kerala_Logo.svg/1024px-Kochi_Tuskers_Kerala_Logo.svg.png',
+	'Kings XI Punjab': 'https://a.espncdn.com/i/teamlogos/cricket/500/335973.png',
+	'Delhi Daredevils': 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f5/Delhi_Capitals_Logo.svg/800px-Delhi_Capitals_Logo.svg.png',
+	'Gujarat Lions': 'https://upload.wikimedia.org/wikipedia/en/c/c4/Gujarat_Lions.png',
+	'Deccan Chargers': 'https://upload.wikimedia.org/wikipedia/en/a/a6/HyderabadDeccanChargers.png',
+	'Sunrisers Hyderabad': 'https://a.espncdn.com/i/teamlogos/cricket/500/628333.png',
+	'Rising Pune Supergiants': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
+	'Chennai Super Kings': 'https://a.espncdn.com/i/teamlogos/cricket/500/335974.png',
+	'Pune Warriors': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png',
+	'Mumbai Indians': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png',
+}
 def teamPage():
 	teams_list = getTeamsList()
 	team = "Gujarat Lions"
@@ -157,6 +174,7 @@ def teamPage():
 	message['team_list'] = teams_list
 	message['roster'] = roster
 	message['team_name'] = team
+	message['img_url'] = team_image_dict[team]
 	return render_template('team.html', len=len(roster), message=message)
 
 
