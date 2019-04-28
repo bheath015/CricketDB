@@ -10,6 +10,8 @@ TEAM_HISTORY = "select playerId, `year`, `name` from playerToTeam  join team on 
 OVER_YEAR_STATS = "select overid, `year`, avg(score) as avScore from (select b.matchid, b.overid, b.inningsno, Sum(b.batsmanscore) + COALESCE(Sum(be.extraruns), 0) AS score from ballToBall b left join ballExtra be on be.matchid = b.matchid AND be.overid = b.overid AND be.ballid = b.ballid AND be.inningsno = b.inningsno GROUP BY b.matchid, b.overid, b.inningsno) matchStats join `match` m on m.`matchID` = matchStats.matchid group by overid, `year`";
 PLAYER_LIST_QUERY = "select * from player"
 
+TEAM_NAMES_QUERY = "select `name` from team;";
+TEAM_ROSTER_QUERY = "select p.name from player p left join playerToTeam pt on p.id = pt.playerId left join team t on t.`id` = pt.`teamId` where pt.year = 2017 and t.name = \"{}\" order by p.name;";
 
 
 COLOR_CODES = {}
@@ -168,29 +170,14 @@ def insertFavPlayer(cursor, username, player):
 	else:
 		cursor.execute("insert into favRecords (username, playerId) values (%s,%s)", (username, player))
 	return
-	
 
 
 
+def getTeamsQuery(cursor):
+	cursor.execute(TEAM_NAMES_QUERY)
+	return [team[0] for team in cursor]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def getPlayersOnRosterQuery(cursor, team):
+	print(TEAM_ROSTER_QUERY.format(team))
+	cursor.execute(TEAM_ROSTER_QUERY.format(team))
+	return [player[0] for player in cursor]
