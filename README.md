@@ -2,7 +2,6 @@
 
 ##############################
 #####    Introduction    #####
-##############################
 
 Welcome to our Cricket Database! The purpose of this website is to learn more about the players and teams of the Indian Premier League, which is a professional Twenty20 cricket league contested from March-May of each year by eight teams representing eight different cities.
 
@@ -10,7 +9,6 @@ We invite new and veteran fans to explore our web application and learn more abo
 
 ##############################
 #####      Features      #####
-##############################
 
 #####    Welcome Page    #####
 
@@ -20,7 +18,6 @@ On our welcome page, you are invited to log into the web app. This will allow us
 
 ##############################
 #####   Getting Started  #####
-##############################
 
 #####    Requirements    #####
 
