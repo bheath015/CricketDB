@@ -138,8 +138,14 @@ def getTeamsList():
 	return getTeamsQuery(cursor)
 
 def getPlayersOnRoster(team):
-	cursor = cnx.cursor()
-	return getPlayersOnRosterQuery(cursor, team)
+	cursor = cnx.cursor(buffered=True)
+	roster = (getPlayersOnRosterQuery(cursor, team))
+
+	output = []
+	for player in roster:
+		output.append((player, getPlayerMongoDetails(player)['imageLink'], getPlayerHandedness(cursor, player)))
+	print(output)
+	return output
 
 app = Flask(__name__)
 
@@ -270,7 +276,7 @@ team_image_dict = {
 	'Sunrisers Hyderabad': 'https://a.espncdn.com/i/teamlogos/cricket/500/628333.png',
 	'Rising Pune Supergiants': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
 	'Chennai Super Kings': 'https://a.espncdn.com/i/teamlogos/cricket/500/335974.png',
-	'Pune Warriors': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png',
+	'Pune Warriors': 'https://upload.wikimedia.org/wikipedia/en/4/4a/Pune_Warriors_India_IPL_Logo.png',
 	'Mumbai Indians': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png'
 }
 
@@ -278,13 +284,43 @@ team_image_dict = {
 def teamPage():
 	teams_list = getTeamsList()
 	team = "Gujarat Lions"
-	roster = getPlayersOnRoster("Gujarat Lions")
+	roster = getPlayersOnRoster(team)
 	message = {}
 	message['team_list'] = teams_list
 	message['roster'] = roster
 	message['team_name'] = team
 	message['img_url'] = team_image_dict[team]
+	message['query 1'] = 'the highest scorer is:'
+	message['response 1'] = 'nikhil'
+	message['query 2'] = 'the most runs are:'
+	message['response 2'] = '20'
+	if roster:
+		message['roster_header'] = 'Roster'
+	else: 
+		message['roster_header'] = 'No Roster Available'
 	return render_template('team.html', len=len(roster), message=message)
 
-
+@app.route('/team', methods=['POST'])
+def teamPage2():
+	teams_list = getTeamsList()
+	team = "Gujarat Lions"
+	if not request.form['team_search']:
+		team = "Gujarat Lions"
+	else:
+		team = request.form['team_search']
+	roster = getPlayersOnRoster(team)
+	message = {}
+	message['team_list'] = teams_list
+	message['roster'] = roster
+	message['team_name'] = team
+	message['img_url'] = team_image_dict[team]
+	message['query 1'] = 'the highest scorer is:'
+	message['response 1'] = 'nikhil'
+	message['query 2'] = 'the most runs are:'
+	message['response 2'] = '20'
+	if roster:
+		message['roster_header'] = 'Roster'
+	else: 
+		message['roster_header'] = 'No Roster Available'
+	return render_template('team.html', len=len(roster), message=message)
 
