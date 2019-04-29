@@ -25,10 +25,10 @@ Our team page presents a profile of your favorite team. Simply enter you favorit
 -An image associated with each player from the Mongo Database
 -The bowling and batting handedness of each player from the SQL Database
 -Rotating queries about each team which include:
---
---
---
---
+--The proportion of right vs left handed bowlers by team
+--The proportion of old vs. young players by team (>= or < 25)
+--The number of Ducks on a team
+--The home win percentage of a team
 
 We also show the crest of your favorite team.
 
