@@ -290,9 +290,9 @@ def teamPage():
 	message['roster'] = roster
 	message['team_name'] = team
 	message['img_url'] = team_image_dict[team]
-	message['query 1'] = 'the highest scorer is:'
-	message['response 1'] = 'nikhil'
-	message['query 2'] = 'the most runs are:'
+	message['query 1'] = 'Highest scorer:'
+	message['response 1'] = 'ugh'
+	message['query 2'] = 'the most runs '
 	message['response 2'] = '20'
 	if roster:
 		message['roster_header'] = 'Roster'
