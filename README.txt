@@ -14,7 +14,21 @@ We invite new and veteran fans to explore our web application and learn more abo
 
 On our welcome page, you are invited to log into the web app. This will allow us to store your personal username and password into a database where we can also store you favorite team and player. 
 
+#####    Player Page     #####
+
 #####     Team Page      #####
+
+Our team page presents a profile of your favorite team. Simply enter you favorite team into the search bar (if you don't have one, type in a random letter and select one from the dropdown of available teams) and click enter. This will direct you to your team's profile page. On this page, we query:
+-The Roster from the SQL Database (if one is available for the team)
+-An image associated with each player from the Mongo Database
+-The bowling and batting handedness of each player from the SQL Database
+-Rotating queries about each team which include:
+--
+--
+--
+--
+
+We also show the crest of your favorite team.
 
 ##############################
 #####   Getting Started  #####
