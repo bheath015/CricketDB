@@ -1,4 +1,7 @@
 import json
+import random
+from playerRandomQueries import *
+
 
 PLAYER_DATA_QUERY = "select * from player";
 USER_DATA_QUERY = "select * from user";
@@ -13,6 +16,22 @@ PLAYER_LIST_QUERY = "select * from player"
 TEAM_NAMES_QUERY = "select `name` from team;";
 TEAM_ROSTER_QUERY = "select p.name from player p left join playerToTeam pt on p.id = pt.playerId left join team t on t.`id` = pt.`teamId` where pt.year = 2017 and t.name = \"{}\" order by p.name;";
 
+
+def getRandomPlayerQueries(cursor, pid):
+
+	keys = PLAYER_RANDOM_QUERIES.keys()
+	randkeys = random.sample(keys, 4)
+	randValues = [PLAYER_RANDOM_QUERIES[k] for k in randkeys]
+	#randValues = PLAYER_RANDOM_QUERIES.values()
+	facts = []
+	for val in randValues:
+		print val["query"]
+		cursor.execute(val["query"], (pid,))
+		rs = cursor.fetchall()
+		if(len(rs) > 0):
+			facts.append(val["fact"].replace("####", str(rs[0][0])))
+
+	return facts
 
 COLOR_CODES = {}
 COLOR_CODES["Royal Challengers Bangalore"] = "#760e26"
