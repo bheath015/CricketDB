@@ -12,7 +12,15 @@ PLAYER_LIST_QUERY = "select * from player"
 HANDEDNESS_QUERY = "select `batHandedness`, `bowlSkill` from player where name = \"{}\";"
 
 TEAM_NAMES_QUERY = "select `name` from team;";
-TEAM_ROSTER_QUERY = "select p.name from player p left join playerToTeam pt on p.id = pt.playerId left join team t on t.`id` = pt.`teamId` where pt.year = 2017 and t.name = \"{}\" order by p.name;";
+TEAM_ROSTER_QUERY = "select p.name from player p left join playerToTeam pt on p.id = pt.playerId left join team t on t.`id` = pt.`teamId` where pt.year = {} and t.name = \"{}\" order by p.name;";
+
+TEAM_NAME_TO_ID_QUERY = "select id from team where name = \"{}\";"
+TEAM_RANDOM_QUERIES = [
+	("This team's home win percentage is", "select (y.home_win/ x.home_tot)*100 as percentage from (select count(*) as home_tot  from `match` m  where  m.city in (select home from team where team.id = {})) x join(select count(*) as home_win  from `match` m  where  matchWinner = {} and m.city in (select home from team where team.id = {})) y on 1=1;"),
+	("The proportion of right handed to left handed bowlers on this team is", "select count(distinct(T2.name)) / (count(distinct(T1.name)) + count(distinct(T2.name))) from (select p.name, YEAR(CURDATE())  - YEAR(dob) as Age, teamId from player p join playerToTeam ptt on p.id = ptt.playerId where ptt.teamId = {} and YEAR(CURDATE())  - YEAR(dob) >= 25) as T1, (select p.name, YEAR(CURDATE())  - YEAR(dob) as Age, teamId from player p join playerToTeam ptt on p.id = ptt.playerId) as T2 where T2.teamId = {} and T2.age < 25;"),
+	("The number of ducks on this team is", "NULL"),
+	("The proportion of players under 25 vs over 25 on this team is", "NULL")
+]
 
 
 COLOR_CODES = {}
@@ -178,12 +186,23 @@ def getTeamsQuery(cursor):
 	cursor.execute(TEAM_NAMES_QUERY)
 	return [team[0] for team in cursor]
 
-def getPlayersOnRosterQuery(cursor, team):
-	print(TEAM_ROSTER_QUERY.format(team))
-	cursor.execute(TEAM_ROSTER_QUERY.format(team))
+def getPlayersOnRosterQuery(cursor, year, team):
+	# print(TEAM_ROSTER_QUERY.format(year, team))
+	cursor.execute(TEAM_ROSTER_QUERY.format(year, team))
+	# print([player[0] for player in cursor])
 	return [player[0] for player in cursor]
 
 def getPlayerHandedness(cursor, player):
 	cursor.execute(HANDEDNESS_QUERY.format(player))
 	out = [skill for skill in cursor]
 	return out[0][0], out[0][1]
+
+def getTeamRandomQuery(cursor, team, index):
+	cursor.execute(TEAM_NAME_TO_ID_QUERY.format(team))
+	ret = [x for x in cursor]
+	team_id = ret[0][0]
+	print(team_id)
+	cursor.execute(TEAM_RANDOM_QUERIES[index][1].format(team_id, team_id, team_id))
+	out = [x for x in cursor]
+	print(out[0][0])
+	return (TEAM_RANDOM_QUERIES[index][0], out[0][0])
