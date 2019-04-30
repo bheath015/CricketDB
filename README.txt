@@ -34,6 +34,24 @@ We also show the crest of your favorite team.
 
 ##### Team-Builder Page  #####
 
+Our team player page allows users to manage a budget and create their very own cricket team. We use our patented algorithm to rank players and assign them a cost. Players are added to a user's roster, and then evaluated as a group. May the best team win!
+
+#####    Trivia Page     #####
+#####       TODO         #####
+
+This page presents many fun Cricket trivia facts that you can use to impress your friends. These include:
+-Who is the best batsman against each bowler by strike rate?
+-How has winning the toss affected winning the match?
+-Which out of town team has won the most matches in all cities where matches are played?
+-Which player has the most player-of-the-match awards in each city where matches are played?
+-Which player has scored the greatest difference of away runs minus home runs?
+-Who bowler allows the highest rate of extras in the league?
+-Who’s whose bunny? (Highest number of times a batsman got out for the same bowler)
+-What is the highest score of runs in an over?
+-Who took more than 100 wickets in IPL?
+-Who scored the most centuries in IPL?
+
+
 ##############################
 #####   Getting Started  #####
 ##############################
@@ -43,3 +61,8 @@ We also show the crest of your favorite team.
 Our web app is a Flask Application (Flask is a web framework written in Python). Therefore, you will need to download Flask and run it within a Python2 environment. 
 
 Because our application relies on robust databases with Cricket team and player information, you will need to also download MySQL-Connector and PyMongo. We use a MySQL instance to hold our basic player and team information, and a Mongo database to hold our more in-depth player data.
+
+##### Running the Program #####
+
+In the flaskApp directory, run the command `FLASK_APP=index.py flask run` and you are good to go!
+Our repo can be found at: https://github.com/bheath015/CricketDB
