@@ -262,33 +262,65 @@ def registerPage():
     return render_template('login.html', message="User created")
 
 team_image_dict = {
-    'Royal Challengers Bangalore': 'https://a.espncdn.com/i/teamlogos/cricket/500/335970.png',
-    'Kolkata Knight Riders': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Kolkata_Knight_Riders_Logo.svg/800px-Kolkata_Knight_Riders_Logo.svg.png',
-    'Rajasthan Royals': 'https://a.espncdn.com/i/teamlogos/cricket/500/335977.png',
-    'Rising Pune Supergiant': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
-    'Kochi Tuskers Kerala': 'https://upload.wikimedia.org/wikipedia/en/thumb/9/96/Kochi_Tuskers_Kerala_Logo.svg/1024px-Kochi_Tuskers_Kerala_Logo.svg.png',
-    'Kings XI Punjab': 'https://a.espncdn.com/i/teamlogos/cricket/500/335973.png',
-    'Delhi Daredevils': 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f5/Delhi_Capitals_Logo.svg/800px-Delhi_Capitals_Logo.svg.png',
-    'Gujarat Lions': 'https://upload.wikimedia.org/wikipedia/en/c/c4/Gujarat_Lions.png',
-    'Deccan Chargers': 'https://upload.wikimedia.org/wikipedia/en/a/a6/HyderabadDeccanChargers.png',
-    'Sunrisers Hyderabad': 'https://a.espncdn.com/i/teamlogos/cricket/500/628333.png',
-    'Rising Pune Supergiants': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
-    'Chennai Super Kings': 'https://a.espncdn.com/i/teamlogos/cricket/500/335974.png',
-    'Pune Warriors': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png',
-    'Mumbai Indians': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png'
+	'Royal Challengers Bangalore': 'https://a.espncdn.com/i/teamlogos/cricket/500/335970.png',
+	'Kolkata Knight Riders': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Kolkata_Knight_Riders_Logo.svg/800px-Kolkata_Knight_Riders_Logo.svg.png',
+	'Rajasthan Royals': 'https://a.espncdn.com/i/teamlogos/cricket/500/335977.png',
+	'Rising Pune Supergiant': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
+	'Kochi Tuskers Kerala': 'https://upload.wikimedia.org/wikipedia/en/thumb/9/96/Kochi_Tuskers_Kerala_Logo.svg/1024px-Kochi_Tuskers_Kerala_Logo.svg.png',
+	'Kings XI Punjab': 'https://a.espncdn.com/i/teamlogos/cricket/500/335973.png',
+	'Delhi Daredevils': 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f5/Delhi_Capitals_Logo.svg/800px-Delhi_Capitals_Logo.svg.png',
+	'Gujarat Lions': 'https://upload.wikimedia.org/wikipedia/en/c/c4/Gujarat_Lions.png',
+	'Deccan Chargers': 'https://upload.wikimedia.org/wikipedia/en/a/a6/HyderabadDeccanChargers.png',
+	'Sunrisers Hyderabad': 'https://a.espncdn.com/i/teamlogos/cricket/500/628333.png',
+	'Rising Pune Supergiants': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
+	'Chennai Super Kings': 'https://a.espncdn.com/i/teamlogos/cricket/500/335974.png',
+	'Pune Warriors': 'https://upload.wikimedia.org/wikipedia/en/4/4a/Pune_Warriors_India_IPL_Logo.png',
+	'Mumbai Indians': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png'
 }
 
 @app.route("/team")
 def teamPage():
-    teams_list = getTeamsList()
-    team = "Gujarat Lions"
-    roster = getPlayersOnRoster("Gujarat Lions")
-    message = {}
-    message['team_list'] = teams_list
-    message['roster'] = roster
-    message['team_name'] = team
-    message['img_url'] = team_image_dict[team]
-    return render_template('team.html', len=len(roster), message=message)
+	teams_list = getTeamsList()
+	team = "Gujarat Lions"
+	roster = getPlayersOnRoster(team)
+	message = {}
+	message['team_list'] = teams_list
+	message['roster'] = roster
+	message['team_name'] = team
+	message['img_url'] = team_image_dict[team]
+	message['query 1'] = 'Highest scorer:'
+	message['response 1'] = 'ugh'
+	message['query 2'] = 'the most runs '
+	message['response 2'] = '20'
+	if roster:
+		message['roster_header'] = 'Roster'
+	else:
+		message['roster_header'] = 'No Roster Available'
+	return render_template('team.html', len=len(roster), message=message)
+
+@app.route('/team', methods=['POST'])
+def teamPage2():
+	teams_list = getTeamsList()
+	team = "Gujarat Lions"
+	if not request.form['team_search']:
+		team = "Gujarat Lions"
+	else:
+		team = request.form['team_search']
+	roster = getPlayersOnRoster(team)
+	message = {}
+	message['team_list'] = teams_list
+	message['roster'] = roster
+	message['team_name'] = team
+	message['img_url'] = team_image_dict[team]
+	message['query 1'] = 'the highest scorer is:'
+	message['response 1'] = 'nikhil'
+	message['query 2'] = 'the most runs are:'
+	message['response 2'] = '20'
+	if roster:
+		message['roster_header'] = 'Roster'
+	else:
+		message['roster_header'] = 'No Roster Available'
+	return render_template('team.html', len=len(roster), message=message)
 
 
 
