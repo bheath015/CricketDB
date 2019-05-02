@@ -7,7 +7,8 @@ from flask import render_template
 from flask import request
 from flask import Flask, session, redirect, url_for, escape, request
 from queries import *
-
+import numpy as np
+np.random.seed(0)
 import pymongo
 
 myclient = pymongo.MongoClient("mongodb://ec2-52-205-35-60.compute-1.amazonaws.com:27017/")
@@ -137,9 +138,26 @@ def getTeamsList():
     cursor = cnx.cursor()
     return getTeamsQuery(cursor)
 
-def getPlayersOnRoster(team):
-    cursor = cnx.cursor()
-    return getPlayersOnRosterQuery(cursor, team)
+def getPlayersOnRoster(year, team):
+	cursor = cnx.cursor(buffered=True)
+	roster = (getPlayersOnRosterQuery(cursor, year, team))
+
+	output = []
+	for player in roster:
+		output.append((player, getPlayerMongoDetails(player)['imageLink'], getPlayerHandedness(cursor, player)))
+	print(output)
+	return output
+
+def getRandomQueries(team):
+	cursor = cnx.cursor(buffered=True)
+	choices = np.random.choice([0, 1, 2, 3], 2, replace=False)
+	# query1 = getTeamRandomQuery(cursor, team, choices[0])
+	query1 = getTeamRandomQuery(cursor, team, 0)
+	# query2 = getTeamRandomQuery(cursor, team, choices[1])
+	query2 = getTeamRandomQuery(cursor, team, 1)
+	return (query1, query2)
+
+
 
 app = Flask(__name__)
 
@@ -278,23 +296,41 @@ team_image_dict = {
 	'Mumbai Indians': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png'
 }
 
+team_year_dict = {
+	'Royal Challengers Bangalore': '2017',
+	'Kolkata Knight Riders': '2017',
+	'Rajasthan Royals': '2015',
+	'Rising Pune Supergiant': '2017',
+	'Kochi Tuskers Kerala': '2011',
+	'Kings XI Punjab': '2017',
+	'Delhi Daredevils': '2017',
+	'Gujarat Lions': '2017',
+	'Deccan Chargers': '2012',
+	'Sunrisers Hyderabad': '2017',
+	'Rising Pune Supergiants': '2016',
+	'Chennai Super Kings': '2015',
+	'Pune Warriors': '2013',
+	'Mumbai Indians': '2017'
+}
+
 @app.route("/team")
 def teamPage():
 	teams_list = getTeamsList()
 	team = "Gujarat Lions"
-	roster = getPlayersOnRoster(team)
+	roster = getPlayersOnRoster(team_year_dict[team], team)
+	randoms = getRandomQueries(team)
 	message = {}
 	message['team_list'] = teams_list
 	message['roster'] = roster
 	message['team_name'] = team
 	message['img_url'] = team_image_dict[team]
-	message['query 1'] = 'Highest scorer:'
-	message['response 1'] = 'ugh'
-	message['query 2'] = 'the most runs '
-	message['response 2'] = '20'
+	message['query 1'] = randoms[0][0]
+	message['response 1'] = randoms[0][1]
+	message['query 2'] = randoms[1][0]
+	message['response 2'] = randoms[1][1]
 	if roster:
 		message['roster_header'] = 'Roster'
-	else:
+	else: 
 		message['roster_header'] = 'No Roster Available'
 	return render_template('team.html', len=len(roster), message=message)
 
@@ -306,21 +342,20 @@ def teamPage2():
 		team = "Gujarat Lions"
 	else:
 		team = request.form['team_search']
-	roster = getPlayersOnRoster(team)
+	roster = getPlayersOnRoster(team_year_dict[team], team)
+	randoms = getRandomQueries(team)
 	message = {}
 	message['team_list'] = teams_list
 	message['roster'] = roster
 	message['team_name'] = team
 	message['img_url'] = team_image_dict[team]
-	message['query 1'] = 'the highest scorer is:'
-	message['response 1'] = 'nikhil'
-	message['query 2'] = 'the most runs are:'
-	message['response 2'] = '20'
+	message['query 1'] = randoms[0][0]
+	message['response 1'] = randoms[0][1]
+	message['query 2'] = randoms[1][0]
+	message['response 2'] = randoms[1][1]
 	if roster:
 		message['roster_header'] = 'Roster'
-	else:
+	else: 
 		message['roster_header'] = 'No Roster Available'
 	return render_template('team.html', len=len(roster), message=message)
-
-
 
