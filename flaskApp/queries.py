@@ -15,12 +15,15 @@ TEAM_NAMES_QUERY = "select `name` from team;";
 TEAM_ROSTER_QUERY = "select p.name from player p left join playerToTeam pt on p.id = pt.playerId left join team t on t.`id` = pt.`teamId` where pt.year = {} and t.name = \"{}\" order by p.name;";
 
 TEAM_NAME_TO_ID_QUERY = "select id from team where name = \"{}\";"
-TEAM_RANDOM_QUERIES = [
+TEAM_RANDOM_QUERIES_A = [
 	("This team's home win percentage is", "select (y.home_win/ x.home_tot)*100 as percentage from (select count(*) as home_tot  from `match` m  where  m.city in (select home from team where team.id = {})) x join(select count(*) as home_win  from `match` m  where  matchWinner = {} and m.city in (select home from team where team.id = {})) y on 1=1;"),
 	("The proportion of right handed to left handed bowlers on this team is", "select count(distinct(T2.name)) / (count(distinct(T1.name)) + count(distinct(T2.name))) from (select p.name, YEAR(CURDATE())  - YEAR(dob) as Age, teamId from player p join playerToTeam ptt on p.id = ptt.playerId where ptt.teamId = {} and YEAR(CURDATE())  - YEAR(dob) >= 25) as T1, (select p.name, YEAR(CURDATE())  - YEAR(dob) as Age, teamId from player p join playerToTeam ptt on p.id = ptt.playerId) as T2 where T2.teamId = {} and T2.age < 25;"),
-	("The number of ducks on this team is", "NULL"),
-	("The proportion of players under 25 vs over 25 on this team is", "NULL")
+	("The number of ducks recorded on this team is", "SELECT COUNT(DISTINCT( T.NAME )) FROM (SELECT p.NAME, p.id, Sum(batsmanscore) AS runs FROM ballToBall b JOIN player p ON p.id = b.strikerid GROUP  BY strikerid HAVING runs ='0') T JOIN playerToTeam ptt ON T.id = ptt.playerid WHERE  ptt.teamid = {} ORDER  BY runs DESC;")
 ]
+
+TEAM_RANDOM_QUERIES_B = [("The percentage of players under 30 on this team is", 
+                          "select count(distinct(name)) from (select p.name, YEAR(CURDATE())  - YEAR(dob) as Age, teamId from player p join playerToTeam ptt on p.id = ptt.playerId) T where teamId = {} and age < 30;", 
+                          "select count(distinct(name)) from (select p.name, YEAR(CURDATE())  - YEAR(dob) as Age, teamId from player p join playerToTeam ptt on p.id = ptt.playerId) T where teamId = {} and age >= 30;")]
 
 
 COLOR_CODES = {}
@@ -201,8 +204,19 @@ def getTeamRandomQuery(cursor, team, index):
 	cursor.execute(TEAM_NAME_TO_ID_QUERY.format(team))
 	ret = [x for x in cursor]
 	team_id = ret[0][0]
-	print(team_id)
-	cursor.execute(TEAM_RANDOM_QUERIES[index][1].format(team_id, team_id, team_id))
-	out = [x for x in cursor]
-	print(out[0][0])
-	return (TEAM_RANDOM_QUERIES[index][0], out[0][0])
+	if index != 3:
+		cursor.execute(TEAM_RANDOM_QUERIES_A[index][1].format(team_id, team_id, team_id))
+		out = [x for x in cursor]
+		out = out[0][0]
+		prompt = TEAM_RANDOM_QUERIES_A[index][0]
+	else:
+		index = index - len(TEAM_RANDOM_QUERIES_A)
+		cursor.execute(TEAM_RANDOM_QUERIES_B[index][1].format(team_id))
+		under = [x for x in cursor]
+		under = under[0][0]
+		cursor.execute(TEAM_RANDOM_QUERIES_B[index][2].format(team_id))
+		over = [x for x in cursor]
+		over = over[0][0]
+		out = float(under) / (float(over) + float(under)) * 100
+		prompt = TEAM_RANDOM_QUERIES_B[index][0]
+	return (prompt, "{}%".format(out))
