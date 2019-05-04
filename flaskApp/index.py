@@ -151,10 +151,10 @@ def getPlayersOnRoster(year, team):
 def getRandomQueries(team):
 	cursor = cnx.cursor(buffered=True)
 	choices = np.random.choice([0, 1, 2, 3], 2, replace=False)
-	# query1 = getTeamRandomQuery(cursor, team, choices[0])
-	query1 = getTeamRandomQuery(cursor, team, 0)
-	# query2 = getTeamRandomQuery(cursor, team, choices[1])
-	query2 = getTeamRandomQuery(cursor, team, 1)
+	query1 = getTeamRandomQuery(cursor, team, choices[0])
+	# query1 = getTeamRandomQuery(cursor, team, 0)
+	query2 = getTeamRandomQuery(cursor, team, choices[1])
+	# query2 = getTeamRandomQuery(cursor, team, 3)
 	return (query1, query2)
 
 
