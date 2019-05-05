@@ -157,7 +157,37 @@ def getRandomQueries(team):
 	# query2 = getTeamRandomQuery(cursor, team, 3)
 	return (query1, query2)
 
+def getTrivia2():
+	cursor = cnx.cursor()
+	return getTrivia2Query(cursor)
 
+def getTrivia3():
+	cursor = cnx.cursor()
+	return getTrivia3Query(cursor)
+
+def getTrivia4():
+	cursor = cnx.cursor()
+	return getTrivia4Query(cursor)
+
+def getTrivia5():
+	cursor = cnx.cursor()
+	return getTrivia5Query(cursor)
+
+def getTrivia6():
+	cursor = cnx.cursor()
+	return getTrivia6Query(cursor)
+
+def getTrivia8():
+	cursor = cnx.cursor()
+	return getTrivia8Query(cursor)
+
+def getTrivia9():
+	cursor = cnx.cursor()
+	return getTrivia9Query(cursor)
+
+def getTrivia10():
+	cursor = cnx.cursor()
+	return getTrivia10Query(cursor)
 
 app = Flask(__name__)
 
@@ -354,4 +384,49 @@ def teamPage2():
 	else: 
 		message['roster_header'] = 'No Roster Available'
 	return render_template('team.html', len=len(roster), message=message)
+
+
+@app.route("/trivia")
+def triviaPage():
+	message = {}
+
+	q2 = getTrivia2()
+	message['query 2'] = q2[0]
+	message['response 2'] = "{}%".format(q2[1][0])
+	
+	q3 = getTrivia3()
+	message['query 3'] = q3[0]
+	print(len(q3[1]))
+	q3[1].append(("", ""))
+	print(len(q3[1]))
+	message['response 3'] = q3[1]
+	
+	q4 = getTrivia4()
+	message['query 4'] = q4[0]
+	q4[1].append(("", ""))
+	message['response 4'] = q4[1]
+
+	q5 = getTrivia5()	
+	message['query 5'] = q5[0]
+	message['response 5'] = "{}".format(q5[1][0])
+
+	q6 = getTrivia6()	
+	message['query 6'] = q6[0]
+	message['response 6'] = "{}".format(q6[1][0])
+
+	q8 = getTrivia8()
+	message['query 8'] = q8[0]
+	message['response 8'] = q8[1][0]
+
+	q9 = getTrivia9()	
+	message['query 9'] = q9[0]
+	message['response 9'] = "{}".format(q9[1][0])
+
+	q10 = getTrivia10()	
+	message['query 10'] = q10[0]
+	message['response 10'] = "{}".format(q10[1][0])
+	
+	message['team_list'] = getTeamsList()
+	return render_template('trivia.html', message=message, len=len(q3[1]))
+
 

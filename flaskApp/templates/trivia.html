@@ -1,0 +1,171 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="page-header">
+	<h1>
+		Trivia
+	</h1>
+</div><!-- /.page-header -->
+
+<div class="row">
+
+	<br>
+	<br>
+	<br>
+
+
+	<div class="hr dotted"></div>
+	<div class="col-xs-12">
+		<div class="profile-user-info profile-user-info-striped col-xs-12 col-sm-6 center">
+
+			<div class="profile-info-row">
+				<div class="profile-info-name"> Trivia Fact #1 </div>
+
+				<div class="profile-info-value" style="font-weight: 900 !important; font-size: larger !important">
+					<span>{{message['query 2']}}</span>
+				</div>
+			</div>
+			<div class="profile-info-row">
+				<div class="profile-info-name">  </div>
+
+				<div class="profile-info-value">
+					<span>{{message['response 2']}}</span>
+				</div>
+			</div>	
+
+			<div class="profile-info-row">
+				<div class="profile-info-name"> Trivia Fact #2 </div>
+
+				<div class="profile-info-value" style="font-weight: 900 !important; font-size: larger !important">
+					<span>{{message['query 3']}}</span>
+					<br>
+				</div>
+			</div>
+			<div class="profile-info-row">
+				<div class="profile-info-name">  </div>
+
+				<div class="profile-info-value">
+					{%for i in range(0, len // 3)%}
+					<div class="row">
+						<div class="col-sm-4">
+							<span>{{message['response 3'][3 * i][0]}} : {{message['response 3'][3 * i][1]}}</span>
+						</div>
+						<div class="col-sm-4">
+							<span>{{message['response 3'][3 * i + 1][0]}} : {{message['response 3'][3 * i + 1][1]}}</span>
+						</div>
+						<div class="col-sm-4">
+							<span>{{message['response 3'][3 * i + 2][0]}} : {{message['response 3'][3 * i + 2][1]}}</span>
+						</div>
+						<br>
+					</div>
+					{%endfor%}
+				</div>
+			</div>	
+
+			<div class="profile-info-row">
+				<div class="profile-info-name"> Trivia Fact #3 </div>
+
+				<div class="profile-info-value" style="font-weight: 900 !important; font-size: larger !important">
+					<span>{{message['query 4']}}</span>
+				</div>
+			</div>
+			<div class="profile-info-row">
+				<div class="profile-info-name">  </div>
+
+				<div class="profile-info-value">
+					{%for i in range(0, len // 2)%}
+					<div class="row">
+						<div class="col-sm-6">
+							<span>{{message['response 4'][2 * i][0]}} : {{message['response 4'][2 * i][1]}}</span>
+						</div>
+						<div class="col-sm-6">
+							<span>{{message['response 4'][2 * i + 1][0]}} : {{message['response 4'][2 * i + 1][1]}}</span>
+						</div>
+						<br>
+					</div>
+					{%endfor%}
+				</div>
+			</div>	
+
+			<div class="profile-info-row">
+				<div class="profile-info-name"> Trivia Fact #4 </div>
+
+				<div class="profile-info-value" style="font-weight: 900 !important; font-size: larger !important">
+					<span>{{message['query 5']}}</span>
+				</div>
+			</div>
+			<div class="profile-info-row">
+				<div class="profile-info-name">  </div>
+
+				<div class="profile-info-value">
+					<span>{{message['response 5']}}</span>
+				</div>
+			</div>	
+
+			<div class="profile-info-row">
+				<div class="profile-info-name"> Trivia Fact #5 </div>
+
+				<div class="profile-info-value" style="font-weight: 900 !important; font-size: larger !important">
+					<span>{{message['query 6']}}</span>
+				</div>
+			</div>
+			<div class="profile-info-row">
+				<div class="profile-info-name">  </div>
+
+				<div class="profile-info-value">
+					<span>{{message['response 6']}}</span>
+				</div>
+			</div>	
+
+			<div class="profile-info-row">
+				<div class="profile-info-name"> Trivia Fact #6 </div>
+				<div class="profile-info-value" style="font-weight: 900 !important; font-size: larger !important">
+					<span>{{message['query 8']}}</span>
+				</div>
+			</div>
+			<div class="profile-info-row">
+				<div class="profile-info-name"> </div>
+
+				<div class="profile-info-value">
+					<span>{{message['response 8']}}</span>
+				</div>
+			</div>
+
+			<div class="profile-info-row">
+				<div class="profile-info-name"> Trivia Fact #7 </div>
+				<div class="profile-info-value" style="font-weight: 900 !important; font-size: larger !important">
+					<span>{{message['query 9']}}</span>
+				</div>
+			</div>
+			<div class="profile-info-row">
+				<div class="profile-info-name"> </div>
+
+				<div class="profile-info-value">
+					<span>{{message['response 9']}}</span>
+				</div>
+			</div>
+
+			<div class="profile-info-row">
+				<div class="profile-info-name"> Trivia Fact #8 </div>
+				<div class="profile-info-value" style="font-weight: 900 !important; font-size: larger !important">
+					<span>{{message['query 10']}}</span>
+				</div>
+			</div>
+			<div class="profile-info-row">
+				<div class="profile-info-name"> </div>
+
+				<div class="profile-info-value">
+					<span>{{message['response 10']}}</span>
+				</div>
+			</div>
+
+		</div>
+
+		<div class="space-20"></div>
+
+		<div class="hr hr2 hr-double"></div>
+
+		<div class="space-6"></div>
+	</div>
+{% endblock %}
+
