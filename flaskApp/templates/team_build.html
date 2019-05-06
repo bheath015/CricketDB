@@ -32,10 +32,10 @@
 														<span class="line-height-1 bigger-170"> [{ bowlScore}] </span>
 
 														<br>
-														<span class="line-height-1 smaller-90"> Bowl Poser </span>
+														<span class="line-height-1 smaller-90"> Bowl Power </span>
 													</span>
 
-										<span class="btn btn-app btn-sm btn-yellow no-hover" ng-show="selectionList.length == 2" ng-click="clickBattle()">
+										<span class="btn btn-app btn-sm btn-yellow no-hover" ng-show="selectionList.length == 11" ng-click="clickBattle()">
 														<span class="line-height-1 bigger-170"> Battle </span>
 
 														<br>
@@ -146,7 +146,7 @@
 			app.controller('TeamPageController', ['$scope', function($scope) { 
 
                 $scope.selectionList = [];
-                $scope.availFunds = 2000*11;
+                $scope.availFunds = 200*11;
                 $scope.selectionCountMax = 11;
                 console.log($scope.tempName);
                 $scope.batScore = 0;

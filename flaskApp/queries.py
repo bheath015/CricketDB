@@ -253,7 +253,7 @@ def getTeamRandomQuery(cursor, team, index):
 		over = over[0][0]
 		out = float(under) / (float(over) + float(under)) * 100
 		prompt = TEAM_RANDOM_QUERIES_B[index][0]
-	return (prompt, "{}%".format(out))
+	return (prompt, "{}".format(out))
 
 def getTrivia1Query(cursor):
 	cursor.execute(TRIVIA_1_QUERY[1])
