@@ -181,6 +181,10 @@ def getTrivia6():
 	cursor = cnx.cursor()
 	return getTrivia6Query(cursor)
 
+def getTrivia7():
+	cursor = cnx.cursor()
+	return getTrivia7Query(cursor)
+
 def getTrivia8():
 	cursor = cnx.cursor()
 	return getTrivia8Query(cursor)
@@ -421,6 +425,10 @@ def triviaPage():
 	q6 = getTrivia6()	
 	message['query 6'] = q6[0]
 	message['response 6'] = "{}".format(q6[1][0])
+
+	q7 = getTrivia7()
+	message['query 7'] = q7[0]
+	message['response 7'] = q7[1]
 
 	q8 = getTrivia8()
 	message['query 8'] = q8[0]
