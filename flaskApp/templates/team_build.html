@@ -22,7 +22,29 @@
 														<br>
 														<span class="line-height-1 smaller-90"> Funds </span>
 													</span>
+										<span class="btn btn-app btn-sm btn-yellow no-hover">
+														<span class="line-height-1 bigger-170"> [{ batScore}] </span>
+
+														<br>
+														<span class="line-height-1 smaller-90"> Bat Power </span>
+													</span>
+										<span class="btn btn-app btn-sm btn-yellow no-hover">
+														<span class="line-height-1 bigger-170"> [{ bowlScore}] </span>
+
+														<br>
+														<span class="line-height-1 smaller-90"> Bowl Poser </span>
+													</span>
+
+										<span class="btn btn-app btn-sm btn-yellow no-hover" ng-show="selectionList.length == 2" ng-click="clickBattle()">
+														<span class="line-height-1 bigger-170"> Battle </span>
+
+														<br>
+														<span class="line-height-1 smaller-90">  </span>
+													</span>
+
 									</div>
+
+
 								</div>
 		</div><!-- /.page-header -->
 
@@ -65,6 +87,9 @@
 					</div>
 
 				</div>
+				<form method="post" action="/battle" name="theForm" id="myForm"  style="display: None">
+					<input type="text" name="jsondata" id="jsondata"/>
+      			</form>
 	</div>
 
 						<!-- /.row -->			
@@ -121,20 +146,13 @@
 			app.controller('TeamPageController', ['$scope', function($scope) { 
 
                 $scope.selectionList = [];
-                $scope.availFunds = 800;
+                $scope.availFunds = 2000*11;
                 $scope.selectionCountMax = 11;
                 console.log($scope.tempName);
+                $scope.batScore = 0;
+                $scope.bowlScore = 0;
 
-                $scope.removePlayer = function(index) {
-                	console.log("Removing");
-                	console.log(index);
-                	var playerCost = $scope.selectionList[index]["cost"];
-                	$scope.selectionList.splice(index, 1);
-                	$scope.availFunds = $scope.availFunds + playerCost;
-                	// console.log($scope.selectionList);
-                	// $scope.$apply();
 
-                }
                 jQuery(function($) {
                 
                  //custom autocomplete (category selection)
@@ -166,10 +184,47 @@
 
                  var mongoInfo = {{message["allMongo"] | tojson}};
 
+                 var playerCostDict = {{message["playerCost"] | tojson}};
+                 var batScore = {{message["batScore"] | tojson}};
+                 var bowlScore = {{message["bowlScore"] | tojson}};
+
                  console.log(mongoInfo);
 
                  console.log(lookupMap);
-                    
+                 console.log(playerCostDict);
+
+                 $scope.removePlayer = function(index) {
+                	console.log("Removing");
+                	console.log(index);
+                	var playerCost = $scope.selectionList[index]["cost"];
+
+                	$scope.availFunds = $scope.availFunds + playerCost;
+                	var name = $scope.selectionList[index]["name"];
+                	$scope.batScore = $scope.batScore - batScore.data[name];
+                	$scope.bowlScore = $scope.bowlScore - bowlScore.data[name];
+                	// console.log($scope.selectionList);
+                	$scope.selectionList.splice(index, 1);
+                	// $scope.$apply();
+
+                }
+
+                $scope.clickBattle = function() {
+
+                	var names = [];
+                	i = 0;
+                	while(i < $scope.selectionList.length) {
+                		names.push($scope.selectionList[i]["name"]);
+                		i += 1;
+                	}
+
+                	console.log(names);
+                	var obj = {}
+                	obj.nameList = names;
+					console.log(JSON.stringify(obj));
+                	document.getElementById("jsondata").value = JSON.stringify(obj);
+                	document.getElementById("myForm").submit();
+
+                }
                     
 
                  console.log(data);
@@ -182,7 +237,8 @@
                      	 	alert("Team consits of 11 players");
                      	 	return
                      	 }
-                     	 var playerCost = 100;
+                     	 var playerCost = playerCostDict.data[ui.item.label];
+                     	 console.log(playerCost);
                      	 if($scope.availFunds < playerCost) {
                      	 	alert("Insufficient Funds");
                      	 	return;
@@ -197,6 +253,8 @@
                          	i =i +  1;
                          }
                          $scope.availFunds = $scope.availFunds - playerCost;
+                         $scope.bowlScore = $scope.bowlScore + bowlScore.data[ui.item.label];
+                         $scope.batScore = $scope.batScore + batScore.data[ui.item.label];
                          playerInfo = {}
                          playerInfo["imageLink"] =  mongoInfo[ui.item.label].imageLink;
                          playerInfo["name"] = ui.item.label;

@@ -20,11 +20,13 @@ TEAM_ROSTER_QUERY = "select p.name from player p left join playerToTeam pt on p.
 TEAM_NAME_TO_ID_QUERY = "select id from team where name = \"{}\";"
 TEAM_RANDOM_QUERIES = [
 	("This team's home win percentage is", "select (y.home_win/ x.home_tot)*100 as percentage from (select count(*) as home_tot  from `match` m  where  m.city in (select home from team where team.id = {})) x join(select count(*) as home_win  from `match` m  where  matchWinner = {} and m.city in (select home from team where team.id = {})) y on 1=1;"),
-	("The proportion of right handed to left handed bowlers on this team is", "select count(distinct(T2.name)) / (count(distinct(T1.name)) + count(distinct(T2.name))) from (select p.name, YEAR(CURDATE())  - YEAR(dob) as Age, teamId from player p join playerToTeam ptt on p.id = ptt.playerId where ptt.teamId = {} and YEAR(CURDATE())  - YEAR(dob) >= 25) as T1, (select p.name, YEAR(CURDATE())  - YEAR(dob) as Age, teamId from player p join playerToTeam ptt on p.id = ptt.playerId) as T2 where T2.teamId = {} and T2.age < 25;"),
-	("The number of ducks on this team is", "NULL"),
-	("The proportion of players under 25 vs over 25 on this team is", "NULL")
+	("The proportion of players under 30 vs over 30 on this team is", "select avg(t.ratio) from ( select SUM(case when allPlayerInfo.age <=30 then 1 else 0 end)/ SUM(case when allPlayerInfo.age >=30 then 1 else 0 end) as ratio from  (select player.id, player.name, allPlayers.year - YEAR(dob) as age, allPlayers.year as season  from (select * from playerToTeam ptt where teamId = {}) allPlayers join player on allPlayers.playerId = player.id) allPlayerInfo group by season) as t"),
+	("The number of ducks on this team is", "select count(strikerID) from (select matchID, strikerID, inningsNo  from ballToBall group by matchID, strikerID having SUM(batsmanScore) = 0) matchDucks join innings i on i.`matchID` = matchDucks.`matchID` and i.inningsNo = matchDucks.`inningsNo` where battingTeam = {} group by battingTeam"),
+	("The proportion of right handed to left handed bowlers on this team is", "select righthanded/lefthanded from ( SELECT (SELECT count(distinct(playerID)) FROM player p join playerToTeam ptt on p.id = ptt.playerId WHERE teamId = {} and p.bowlSkill like ('%Right%')) AS righthanded, (SELECT COUNT(DISTINCT(playerID)) FROM player p JOIN playerToTeam ptt ON p.id = ptt.playerId WHERE teamId = {} and p.bowlSkill like ('%left%')) AS lefthanded FROM dual) as temp;"),
+	("The proportion of right handed to left handed batsmen on this team is", "select righthanded/lefthanded from ( SELECT (SELECT count(distinct(playerID)) FROM player p join playerToTeam ptt on p.id = ptt.playerId WHERE teamId = {} and p.batHandedness like ('%Right%')) AS righthanded, (SELECT COUNT(DISTINCT(playerID)) FROM player p JOIN playerToTeam ptt ON p.id = ptt.playerId WHERE teamId = {} and p.`batHandedness` like ('%left%')) AS lefthanded FROM dual) as temp;")
 ]
 
+from score import *
 
 def getRandomPlayerQueries(cursor, pid):
 
@@ -208,7 +210,7 @@ def getTeamsQuery(cursor):
 def getPlayersOnRosterQuery(cursor, year, team):
 	# print(TEAM_ROSTER_QUERY.format(year, team))
 	cursor.execute(TEAM_ROSTER_QUERY.format(year, team))
-	# print([player[0] for player in cursor])
+	#print([player[0] for player in cursor])
 	return [player[0] for player in cursor]
 
 def getPlayerHandedness(cursor, player):

@@ -10,6 +10,8 @@ from queries import *
 import numpy as np
 np.random.seed(0)
 import pymongo
+from score import *
+import time
 
 myclient = pymongo.MongoClient("mongodb://ec2-52-205-35-60.compute-1.amazonaws.com:27017/")
 mydb = myclient["cricket"]
@@ -18,7 +20,7 @@ mycol = mydb["player"]
 
 cnx = mysql.connector.connect(user='root', database='cricketdb', host="cricketdb.cpemtivwfnzb.us-east-1.rds.amazonaws.com", passwd="Cricket1234!")
 
-
+REDIS_TEAM_SCORE = "ALL_TEAM_SCORE"
 
 def getUserNameList():
     cursor = cnx.cursor()
@@ -103,7 +105,7 @@ def getPlayerMongoDetails(fullName):
     data[0]["battingData"] = data[0]["battingData"].replace('<table class="engineTable">', '<table class = "table table-bordered">')
 
 
-    return data[0];
+    return data[0]
 
 def getAllMongoDetails():
     query = {}
@@ -139,24 +141,58 @@ def getTeamsList():
     return getTeamsQuery(cursor)
 
 def getPlayersOnRoster(year, team):
-	cursor = cnx.cursor(buffered=True)
-	roster = (getPlayersOnRosterQuery(cursor, year, team))
+    cursor = cnx.cursor(buffered=True)
+    roster = (getPlayersOnRosterQuery(cursor, year, team))
 
-	output = []
-	for player in roster:
-		output.append((player, getPlayerMongoDetails(player)['imageLink'], getPlayerHandedness(cursor, player)))
-	print(output)
-	return output
+    output = []
+    for player in roster:
+        output.append((player, getPlayerMongoDetails(player)['imageLink'], getPlayerHandedness(cursor, player)))
+    return output
 
 def getRandomQueries(team):
-	cursor = cnx.cursor(buffered=True)
-	choices = np.random.choice([0, 1, 2, 3], 2, replace=False)
-	# query1 = getTeamRandomQuery(cursor, team, choices[0])
-	query1 = getTeamRandomQuery(cursor, team, 0)
-	# query2 = getTeamRandomQuery(cursor, team, choices[1])
-	query2 = getTeamRandomQuery(cursor, team, 1)
-	return (query1, query2)
+    cursor = cnx.cursor(buffered=True)
+    choices = np.random.choice([0, 1, 2, 3, 4], 2, replace=False)
+    query1 = getTeamRandomQuery(cursor, team, choices[0])
+    #query1 = getTeamRandomQuery(cursor, team, 2)
+    query2 = getTeamRandomQuery(cursor, team, choices[1])
+    #query2 = getTeamRandomQuery(cursor, team, 3)
+    return (query1, query2)
 
+def getAllTeamsScoresFromCache():
+    entry = r.get(REDIS_TEAM_SCORE)
+    if entry is None :
+        entry = getAllTeamsScores()
+        r.set(REDIS_TEAM_SCORE, json.dumps(entry))
+        return entry
+    else:
+        print "From Cache #####################################"
+        obj = json.loads(entry)
+        millis = int(round(time.time() * 1000))
+        if(millis - obj["time_stamp"] < CACHE_REFRESH):
+            return obj
+        entry = getAllTeamsScores()
+        r.set(REDIS_TEAM_SCORE, json.dumps(entry))
+        return entry
+
+
+def getAllTeamsScores():
+    teamData = {}
+    for teamName in team_year_dict:
+        playersData = getPlayersOnRoster(team_year_dict[teamName], teamName)
+        teamData[teamName] = []
+        for tup in playersData:
+            teamData[teamName].append(tup[0])
+
+    teamScores = {}
+
+    for teamName in teamData:
+        teamScores[teamName] = get_norm_scores(teamData[teamName])
+
+    millis = int(round(time.time() * 1000))
+    entry = {}
+    entry["data"] = teamScores
+    entry["time_stamp"] = millis
+    return entry
 
 
 app = Flask(__name__)
@@ -237,10 +273,108 @@ def maketeam():
     data['playerInfoList'] = getPlayerListStats()
     data['playerAutoComplete'] = getPlayerAutoCompleteData()
     data['allMongo'] = getAllMongoDetails()
+    data['playerCost'] = redis_cache_cost()
+    data['batScore'] = redis_cache_bat_cost()
+    data['bowlScore'] = redis_cache_bowl_cost()
     data['team_list'] = getTeamsList()
     return render_template('team_build.html', message = data)
 
 
+@app.route("/battle", methods=['POST'])
+def showBattle():
+    jsonData = request.form["jsondata"]
+    print jsonData
+    obj = json.loads(jsonData)
+    playerNames = obj["nameList"]
+    scoreTuple = get_norm_scores(playerNames)
+    scoreTemp = getAllTeamsScoresFromCache()
+    scoreTemp = scoreTemp["data"]
+    scoreTemp["user"] = scoreTuple
+    values = []
+
+    del scoreTemp["Rising Pune Supergiants"]
+    del scoreTemp["Rising Pune Supergiant"]
+    del scoreTemp["Kochi Tuskers Kerala"]
+    del scoreTemp["Gujarat Lions"]
+    del scoreTemp["Deccan Chargers"]
+    del scoreTemp["Pune Warriors"]
+    del scoreTemp["Rajasthan Royals"]
+
+    for teamName in scoreTemp:
+        if teamName!= "user":
+            values.append((teamName, scoreTemp[teamName], team_image_dict[teamName]))
+        else:
+            values.append((teamName, scoreTemp[teamName], "/static/ace-master/assets/images/avatars/user.jpg"))
+
+
+
+    from random import shuffle
+    shuffle(values)
+    print values
+    print len(values)
+    data = {}
+    makeMatch(values, 1, data)
+    print(data)
+
+    message = {}
+    message["match"] = data
+
+    return render_template('battle_view.html', message = message)
+
+
+
+def winner(T1BA, T1BO, T2BA, T2BO):
+    import random
+    t=[0,1]
+    if(T1BA>T2BA and T1BO>T2BO):
+        return 0
+    elif (T1BA+T1BO > T2BA+T2BO):
+        return 0
+    elif (T1BA+T1BO < T2BA+T2BO):
+        return 1
+    else:
+        return random.choice(t)
+
+
+
+
+def makeMatch(values, roundIndex, data):
+
+    data[roundIndex] = {}
+    data[roundIndex]["teams"] = values
+
+    winners = []
+    looser = []
+
+    i = 0;
+    while(i < len(values)):
+        print values, i
+        teamA = values[i]
+        teamB = values[i+1]
+
+        win = winner(teamA[1][0], teamA[1][1], teamB[1][0], teamB[1][1])
+
+        if(win == 0):
+            winners.append(teamA)
+            looser.append(teamB)
+        else:
+            winners.append(teamB)
+            looser.append(teamA)
+
+        i = i +2
+
+    data[roundIndex]["winners"] = winners
+
+
+    if(len(values) == 4):
+        makeMatch(winners, roundIndex + 2 , data)
+        makeMatch(looser, roundIndex + 1, data)
+        return
+
+    if(len(winners) > 1):
+        makeMatch(winners, roundIndex + 1, data)
+
+    return
 
 
 
@@ -280,82 +414,82 @@ def registerPage():
     return render_template('login.html', message="User created")
 
 team_image_dict = {
-	'Royal Challengers Bangalore': 'https://a.espncdn.com/i/teamlogos/cricket/500/335970.png',
-	'Kolkata Knight Riders': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Kolkata_Knight_Riders_Logo.svg/800px-Kolkata_Knight_Riders_Logo.svg.png',
-	'Rajasthan Royals': 'https://a.espncdn.com/i/teamlogos/cricket/500/335977.png',
-	'Rising Pune Supergiant': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
-	'Kochi Tuskers Kerala': 'https://upload.wikimedia.org/wikipedia/en/thumb/9/96/Kochi_Tuskers_Kerala_Logo.svg/1024px-Kochi_Tuskers_Kerala_Logo.svg.png',
-	'Kings XI Punjab': 'https://a.espncdn.com/i/teamlogos/cricket/500/335973.png',
-	'Delhi Daredevils': 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f5/Delhi_Capitals_Logo.svg/800px-Delhi_Capitals_Logo.svg.png',
-	'Gujarat Lions': 'https://upload.wikimedia.org/wikipedia/en/c/c4/Gujarat_Lions.png',
-	'Deccan Chargers': 'https://upload.wikimedia.org/wikipedia/en/a/a6/HyderabadDeccanChargers.png',
-	'Sunrisers Hyderabad': 'https://a.espncdn.com/i/teamlogos/cricket/500/628333.png',
-	'Rising Pune Supergiants': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
-	'Chennai Super Kings': 'https://a.espncdn.com/i/teamlogos/cricket/500/335974.png',
-	'Pune Warriors': 'https://upload.wikimedia.org/wikipedia/en/4/4a/Pune_Warriors_India_IPL_Logo.png',
-	'Mumbai Indians': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png'
+    'Royal Challengers Bangalore': 'https://a.espncdn.com/i/teamlogos/cricket/500/335970.png',
+    'Kolkata Knight Riders': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Kolkata_Knight_Riders_Logo.svg/800px-Kolkata_Knight_Riders_Logo.svg.png',
+    'Rajasthan Royals': 'https://a.espncdn.com/i/teamlogos/cricket/500/335977.png',
+    'Rising Pune Supergiant': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
+    'Kochi Tuskers Kerala': 'https://upload.wikimedia.org/wikipedia/en/thumb/9/96/Kochi_Tuskers_Kerala_Logo.svg/1024px-Kochi_Tuskers_Kerala_Logo.svg.png',
+    'Kings XI Punjab': 'https://a.espncdn.com/i/teamlogos/cricket/500/335973.png',
+    'Delhi Daredevils': 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f5/Delhi_Capitals_Logo.svg/800px-Delhi_Capitals_Logo.svg.png',
+    'Gujarat Lions': 'https://upload.wikimedia.org/wikipedia/en/c/c4/Gujarat_Lions.png',
+    'Deccan Chargers': 'https://upload.wikimedia.org/wikipedia/en/a/a6/HyderabadDeccanChargers.png',
+    'Sunrisers Hyderabad': 'https://a.espncdn.com/i/teamlogos/cricket/500/628333.png',
+    'Rising Pune Supergiants': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Rising_Pune_Supergiant.png',
+    'Chennai Super Kings': 'https://a.espncdn.com/i/teamlogos/cricket/500/335974.png',
+    'Pune Warriors': 'https://upload.wikimedia.org/wikipedia/en/4/4a/Pune_Warriors_India_IPL_Logo.png',
+    'Mumbai Indians': 'https://a.espncdn.com/i/teamlogos/cricket/500/335978.png'
 }
 
 team_year_dict = {
-	'Royal Challengers Bangalore': '2017',
-	'Kolkata Knight Riders': '2017',
-	'Rajasthan Royals': '2015',
-	'Rising Pune Supergiant': '2017',
-	'Kochi Tuskers Kerala': '2011',
-	'Kings XI Punjab': '2017',
-	'Delhi Daredevils': '2017',
-	'Gujarat Lions': '2017',
-	'Deccan Chargers': '2012',
-	'Sunrisers Hyderabad': '2017',
-	'Rising Pune Supergiants': '2016',
-	'Chennai Super Kings': '2015',
-	'Pune Warriors': '2013',
-	'Mumbai Indians': '2017'
+    'Royal Challengers Bangalore': '2017',
+    'Kolkata Knight Riders': '2017',
+    'Rajasthan Royals': '2015',
+    'Rising Pune Supergiant': '2017',
+    'Kochi Tuskers Kerala': '2011',
+    'Kings XI Punjab': '2017',
+    'Delhi Daredevils': '2017',
+    'Gujarat Lions': '2017',
+    'Deccan Chargers': '2012',
+    'Sunrisers Hyderabad': '2017',
+    'Rising Pune Supergiants': '2016',
+    'Chennai Super Kings': '2015',
+    'Pune Warriors': '2013',
+    'Mumbai Indians': '2017'
 }
 
 @app.route("/team")
 def teamPage():
-	teams_list = getTeamsList()
-	team = "Gujarat Lions"
-	roster = getPlayersOnRoster(team_year_dict[team], team)
-	randoms = getRandomQueries(team)
-	message = {}
-	message['team_list'] = teams_list
-	message['roster'] = roster
-	message['team_name'] = team
-	message['img_url'] = team_image_dict[team]
-	message['query 1'] = randoms[0][0]
-	message['response 1'] = randoms[0][1]
-	message['query 2'] = randoms[1][0]
-	message['response 2'] = randoms[1][1]
-	if roster:
-		message['roster_header'] = 'Roster'
-	else: 
-		message['roster_header'] = 'No Roster Available'
-	return render_template('team.html', len=len(roster), message=message)
+    teams_list = getTeamsList()
+    team = "Gujarat Lions"
+    roster = getPlayersOnRoster(team_year_dict[team], team)
+    randoms = getRandomQueries(team)
+    message = {}
+    message['team_list'] = teams_list
+    message['roster'] = roster
+    message['team_name'] = team
+    message['img_url'] = team_image_dict[team]
+    message['query 1'] = randoms[0][0]
+    message['response 1'] = randoms[0][1]
+    message['query 2'] = randoms[1][0]
+    message['response 2'] = randoms[1][1]
+    if roster:
+        message['roster_header'] = 'Roster'
+    else: 
+        message['roster_header'] = 'No Roster Available'
+    return render_template('team.html', len=len(roster), message=message)
 
 @app.route('/team', methods=['POST'])
 def teamPage2():
-	teams_list = getTeamsList()
-	team = "Gujarat Lions"
-	if not request.form['team_search']:
-		team = "Gujarat Lions"
-	else:
-		team = request.form['team_search']
-	roster = getPlayersOnRoster(team_year_dict[team], team)
-	randoms = getRandomQueries(team)
-	message = {}
-	message['team_list'] = teams_list
-	message['roster'] = roster
-	message['team_name'] = team
-	message['img_url'] = team_image_dict[team]
-	message['query 1'] = randoms[0][0]
-	message['response 1'] = randoms[0][1]
-	message['query 2'] = randoms[1][0]
-	message['response 2'] = randoms[1][1]
-	if roster:
-		message['roster_header'] = 'Roster'
-	else: 
-		message['roster_header'] = 'No Roster Available'
-	return render_template('team.html', len=len(roster), message=message)
+    teams_list = getTeamsList()
+    team = "Gujarat Lions"
+    if not request.form['team_search']:
+        team = "Gujarat Lions"
+    else:
+        team = request.form['team_search']
+    roster = getPlayersOnRoster(team_year_dict[team], team)
+    randoms = getRandomQueries(team)
+    message = {}
+    message['team_list'] = teams_list
+    message['roster'] = roster
+    message['team_name'] = team
+    message['img_url'] = team_image_dict[team]
+    message['query 1'] = randoms[0][0]
+    message['response 1'] = randoms[0][1]
+    message['query 2'] = randoms[1][0]
+    message['response 2'] = randoms[1][1]
+    if roster:
+        message['roster_header'] = 'Roster'
+    else: 
+        message['roster_header'] = 'No Roster Available'
+    return render_template('team.html', len=len(roster), message=message)
 
