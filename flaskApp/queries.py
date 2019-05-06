@@ -18,13 +18,26 @@ TEAM_NAMES_QUERY = "select `name` from team;";
 TEAM_ROSTER_QUERY = "select p.name from player p left join playerToTeam pt on p.id = pt.playerId left join team t on t.`id` = pt.`teamId` where pt.year = {} and t.name = \"{}\" order by p.name;";
 
 TEAM_NAME_TO_ID_QUERY = "select id from team where name = \"{}\";"
-TEAM_RANDOM_QUERIES = [
+TEAM_RANDOM_QUERIES_A = [
 	("This team's home win percentage is", "select (y.home_win/ x.home_tot)*100 as percentage from (select count(*) as home_tot  from `match` m  where  m.city in (select home from team where team.id = {})) x join(select count(*) as home_win  from `match` m  where  matchWinner = {} and m.city in (select home from team where team.id = {})) y on 1=1;"),
 	("The proportion of players under 30 vs over 30 on this team is", "select avg(t.ratio) from ( select SUM(case when allPlayerInfo.age <=30 then 1 else 0 end)/ SUM(case when allPlayerInfo.age >=30 then 1 else 0 end) as ratio from  (select player.id, player.name, allPlayers.year - YEAR(dob) as age, allPlayers.year as season  from (select * from playerToTeam ptt where teamId = {}) allPlayers join player on allPlayers.playerId = player.id) allPlayerInfo group by season) as t"),
 	("The number of ducks on this team is", "select count(strikerID) from (select matchID, strikerID, inningsNo  from ballToBall group by matchID, strikerID having SUM(batsmanScore) = 0) matchDucks join innings i on i.`matchID` = matchDucks.`matchID` and i.inningsNo = matchDucks.`inningsNo` where battingTeam = {} group by battingTeam"),
 	("The proportion of right handed to left handed bowlers on this team is", "select righthanded/lefthanded from ( SELECT (SELECT count(distinct(playerID)) FROM player p join playerToTeam ptt on p.id = ptt.playerId WHERE teamId = {} and p.bowlSkill like ('%Right%')) AS righthanded, (SELECT COUNT(DISTINCT(playerID)) FROM player p JOIN playerToTeam ptt ON p.id = ptt.playerId WHERE teamId = {} and p.bowlSkill like ('%left%')) AS lefthanded FROM dual) as temp;"),
 	("The proportion of right handed to left handed batsmen on this team is", "select righthanded/lefthanded from ( SELECT (SELECT count(distinct(playerID)) FROM player p join playerToTeam ptt on p.id = ptt.playerId WHERE teamId = {} and p.batHandedness like ('%Right%')) AS righthanded, (SELECT COUNT(DISTINCT(playerID)) FROM player p JOIN playerToTeam ptt ON p.id = ptt.playerId WHERE teamId = {} and p.`batHandedness` like ('%left%')) AS lefthanded FROM dual) as temp;")
 ]
+
+TEAM_RANDOM_QUERIES_B = [("The percentage of players under 30 on this team is",
+                          "select count(distinct(name)) from (select p.name, YEAR(CURDATE())  - YEAR(dob) as Age, teamId from player p join playerToTeam ptt on p.id = ptt.playerId) T where teamId = {} and age < 30;",
+                          "select count(distinct(name)) from (select p.name, YEAR(CURDATE())  - YEAR(dob) as Age, teamId from player p join playerToTeam ptt on p.id = ptt.playerId) T where teamId = {} and age >= 30;")]
+
+TRIVIA_2_QUERY = ("If you win the toss, the liklihood that you will win the match is:", "SELECT ( m2.c / m1.c ) * 100 FROM   (SELECT Count(*) AS c FROM   `match`) m1, (SELECT Count(*) AS c FROM `match` WHERE  tosswinner = matchwinner) m2;")
+TRIVIA_3_QUERY = ("The out of town teams with the most wins in all cities where matches are played are:", "SELECT city, name, Max(wins) FROM (SELECT m.city, t.name, Count(m.matchwinner) AS wins FROM `match` m LEFT JOIN team t ON m.matchwinner = t.id WHERE  m.city <> t.home GROUP  BY m.city, t.name) AS awayWins GROUP  BY city;")
+TRIVIA_4_QUERY = ("The players with the most \"Player of the Match\" awards where all matches are played are:", "SELECT poms.city, poms.name, Max(poms.pom) FROM (SELECT m.city, p.name, Count(p.name) AS pom FROM `match` m LEFT JOIN player p ON m.playerofthematch = p.id WHERE  city IS NOT NULL AND p.name IS NOT NULL GROUP  BY m.city, p.name) AS poms GROUP  BY city;")
+TRIVIA_5_QUERY = ("The player with the greatest difference of away vs. home runs is:", "SELECT p.name, Abs(homeScore.score - awayScore.score) FROM (SELECT b.strikerid AS bman, Sum(b.batsmanscore) / Count(DISTINCT b.matchid) AS score FROM ballToBall b JOIN `match` m ON b.matchid = m.`matchid` JOIN innings ON `innings`.`matchid` = b.matchid JOIN team t ON innings.`battingteam` = t.`id` AND t.home = m.`city` GROUP BY b.strikerid) AS homeScore JOIN (SELECT b.strikerid AS bman, Sum(b.batsmanscore) / Count(DISTINCT b.matchid) AS score FROM ballToBall b JOIN `match` m ON b.matchid = m.`matchid` JOIN innings ON `innings`.`matchid` = b.matchid JOIN team t ON innings.`battingteam` = t.`id`  AND t.home <> m.`city` GROUP BY b.strikerid) AS awayScore ON homeScore.bman = awayScore.bman JOIN player p ON p.`id` = homeScore.bman ORDER  BY Abs(homeScore.score - awayScore.score) DESC LIMIT 1;")
+TRIVIA_6_QUERY = ("The player with the most extras in the league is:", "SELECT p.NAME, Sum(bowlerMatch.badcount) / Count(bowlerMatch.matchid) AS badAverage FROM (SELECT b.bowlerid AS bowlerID, b.matchid, Count(*) AS badCount FROM ballToBall b JOIN ballExtra be ON be.matchid = b.matchid AND be.overid = b.overid AND be.ballid = b.ballid AND be.inningsno = b.inningsno GROUP BY b.bowlerid, b.matchid) AS bowlerMatch JOIN player p ON p.id = bowlerMatch.bowlerid GROUP  BY bowlerMatch.bowlerid, p.NAME ORDER  BY Sum(bowlerMatch.badcount) / Count(bowlerMatch.matchid) DESC LIMIT 1;")
+TRIVIA_8_QUERY = ("The most runs scored in an over is:", "SELECT b.matchid, b.overid, b.inningsno, Sum(b.batsmanscore) AS score, COALESCE(Sum(be.extraruns), 0) AS extra, Sum(b.batsmanscore) + COALESCE(Sum(be.extraruns), 0) AS temp FROM ballToBall b LEFT JOIN ballExtra be ON be.matchid = b.matchid AND be.overid = b.overid AND be.ballid = b.ballid AND be.inningsno = b.inningsno GROUP  BY b.matchid, b.overid, b.inningsno HAVING Sum(batsmanscore) > 20 ORDER  BY score DESC LIMIT 1;")
+TRIVIA_9_QUERY = ("The players with more than 100 wickets is:", "SELECT p.NAME, Count(outputtype) AS wickets FROM ballToBall b JOIN player p ON p.id = b.bowlerid WHERE  outputtype IN ( 'caught', 'bowled', 'lbw', 'stumped' ) GROUP  BY bowlerid HAVING Count(outputtype) > 100 ORDER  BY wickets DESC;")
+TRIVIA_10_QUERY = ("The player with the most centuries is:", "SELECT name, Count(*) AS n FROM (SELECT m.matchid, p.name, Sum(b.batsmanscore) AS score FROM ballToBall b LEFT JOIN `match` m ON b.matchid = m.matchid LEFT JOIN player p ON b.strikerid = p.id GROUP  BY b.strikerid, b.matchid HAVING Sum(b.batsmanscore) > 100) AS cents GROUP  BY name ORDER  BY Count(*) DESC LIMIT  1; ")
 
 from score import *
 
@@ -222,8 +235,62 @@ def getTeamRandomQuery(cursor, team, index):
 	cursor.execute(TEAM_NAME_TO_ID_QUERY.format(team))
 	ret = [x for x in cursor]
 	team_id = ret[0][0]
-	print(team_id)
-	cursor.execute(TEAM_RANDOM_QUERIES[index][1].format(team_id, team_id, team_id))
-	out = [x for x in cursor]
-	print(out[0][0])
-	return (TEAM_RANDOM_QUERIES[index][0], out[0][0])
+	if True:
+		cursor.execute(TEAM_RANDOM_QUERIES_A[index][1].format(team_id, team_id, team_id))
+		out = [x for x in cursor]
+		out = out[0][0]
+		prompt = TEAM_RANDOM_QUERIES_A[index][0]
+	else:
+		index = index - len(TEAM_RANDOM_QUERIES_A)
+		cursor.execute(TEAM_RANDOM_QUERIES_B[index][1].format(team_id))
+		under = [x for x in cursor]
+		under = under[0][0]
+		cursor.execute(TEAM_RANDOM_QUERIES_B[index][2].format(team_id))
+		over = [x for x in cursor]
+		over = over[0][0]
+		out = float(under) / (float(over) + float(under)) * 100
+		prompt = TEAM_RANDOM_QUERIES_B[index][0]
+	return (prompt, "{}%".format(out))
+
+def getTrivia2Query(cursor):
+	cursor.execute(TRIVIA_2_QUERY[1])
+	out = [team[0] for team in cursor]
+	return TRIVIA_2_QUERY[0], out
+
+def getTrivia3Query(cursor):
+	cursor.execute(TRIVIA_3_QUERY[1])
+	out = [team[0:2] for team in cursor]
+	return TRIVIA_3_QUERY[0], out
+
+def getTrivia4Query(cursor):
+	cursor.execute(TRIVIA_4_QUERY[1])
+	out = [team[0:2] for team in cursor]
+	return TRIVIA_4_QUERY[0], out
+
+def getTrivia5Query(cursor):
+	cursor.execute(TRIVIA_5_QUERY[1])
+	out = [team[0] for team in cursor]
+	return TRIVIA_5_QUERY[0], out
+
+def getTrivia6Query(cursor):
+	cursor.execute(TRIVIA_6_QUERY[1])
+	out = [team[0] for team in cursor]
+	return TRIVIA_6_QUERY[0], out
+
+def getTrivia8Query(cursor):
+	cursor.execute(TRIVIA_8_QUERY[1])
+	out = [team[3] for team in cursor]
+	return TRIVIA_8_QUERY[0], out
+
+def getTrivia9Query(cursor):
+	cursor.execute(TRIVIA_9_QUERY[1])
+	out = [team[0] for team in cursor]
+	return TRIVIA_9_QUERY[0], out
+
+def getTrivia10Query(cursor):
+	cursor.execute(TRIVIA_10_QUERY[1])
+	out = [team[0] for team in cursor]
+	return TRIVIA_10_QUERY[0], out
+
+
+

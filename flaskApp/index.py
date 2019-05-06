@@ -151,11 +151,11 @@ def getPlayersOnRoster(year, team):
 
 def getRandomQueries(team):
     cursor = cnx.cursor(buffered=True)
-    choices = np.random.choice([0, 1, 2, 3, 4], 2, replace=False)
+    choices = np.random.choice([0, 1, 2, 3], 2, replace=False)
     query1 = getTeamRandomQuery(cursor, team, choices[0])
-    #query1 = getTeamRandomQuery(cursor, team, 2)
+    # query1 = getTeamRandomQuery(cursor, team, 0)
     query2 = getTeamRandomQuery(cursor, team, choices[1])
-    #query2 = getTeamRandomQuery(cursor, team, 3)
+    # query2 = getTeamRandomQuery(cursor, team, 3)
     return (query1, query2)
 
 def getAllTeamsScoresFromCache():
@@ -193,7 +193,37 @@ def getAllTeamsScores():
     entry["data"] = teamScores
     entry["time_stamp"] = millis
     return entry
+def getTrivia2():
+    cursor = cnx.cursor()
+    return getTrivia2Query(cursor)
 
+def getTrivia3():
+    cursor = cnx.cursor()
+    return getTrivia3Query(cursor)
+
+def getTrivia4():
+    cursor = cnx.cursor()
+    return getTrivia4Query(cursor)
+
+def getTrivia5():
+    cursor = cnx.cursor()
+    return getTrivia5Query(cursor)
+
+def getTrivia6():
+    cursor = cnx.cursor()
+    return getTrivia6Query(cursor)
+
+def getTrivia8():
+    cursor = cnx.cursor()
+    return getTrivia8Query(cursor)
+
+def getTrivia9():
+    cursor = cnx.cursor()
+    return getTrivia9Query(cursor)
+
+def getTrivia10():
+    cursor = cnx.cursor()
+    return getTrivia10Query(cursor)
 
 app = Flask(__name__)
 
@@ -449,6 +479,10 @@ team_year_dict = {
 
 @app.route("/team")
 def teamPage():
+    if 'username' not in session:
+        return redirect("/loginpage")
+    username = session["username"]
+    
     teams_list = getTeamsList()
     team = "Gujarat Lions"
     roster = getPlayersOnRoster(team_year_dict[team], team)
@@ -462,14 +496,19 @@ def teamPage():
     message['response 1'] = randoms[0][1]
     message['query 2'] = randoms[1][0]
     message['response 2'] = randoms[1][1]
+    message["username"] = username
     if roster:
         message['roster_header'] = 'Roster'
-    else: 
+    else:
         message['roster_header'] = 'No Roster Available'
     return render_template('team.html', len=len(roster), message=message)
 
 @app.route('/team', methods=['POST'])
 def teamPage2():
+    if 'username' not in session:
+        return redirect("/loginpage")
+    username = session["username"]
+    
     teams_list = getTeamsList()
     team = "Gujarat Lions"
     if not request.form['team_search']:
@@ -487,9 +526,59 @@ def teamPage2():
     message['response 1'] = randoms[0][1]
     message['query 2'] = randoms[1][0]
     message['response 2'] = randoms[1][1]
+    message["username"] = username
     if roster:
         message['roster_header'] = 'Roster'
-    else: 
+    else:
         message['roster_header'] = 'No Roster Available'
     return render_template('team.html', len=len(roster), message=message)
+
+
+@app.route("/trivia")
+def triviaPage():
+    if 'username' not in session:
+        return redirect("/loginpage")
+    username = session["username"]
+    message = {}
+    message["username"] = username
+
+    q2 = getTrivia2()
+    message['query 2'] = q2[0]
+    message['response 2'] = "{}%".format(q2[1][0])
+
+    q3 = getTrivia3()
+    message['query 3'] = q3[0]
+    print(len(q3[1]))
+    q3[1].append(("", ""))
+    print(len(q3[1]))
+    message['response 3'] = q3[1]
+
+    q4 = getTrivia4()
+    message['query 4'] = q4[0]
+    q4[1].append(("", ""))
+    message['response 4'] = q4[1]
+
+    q5 = getTrivia5()
+    message['query 5'] = q5[0]
+    message['response 5'] = "{}".format(q5[1][0])
+
+    q6 = getTrivia6()
+    message['query 6'] = q6[0]
+    message['response 6'] = "{}".format(q6[1][0])
+
+    q8 = getTrivia8()
+    message['query 8'] = q8[0]
+    message['response 8'] = q8[1][0]
+
+    q9 = getTrivia9()
+    message['query 9'] = q9[0]
+    message['response 9'] = "{}".format(q9[1][0])
+
+    q10 = getTrivia10()
+    message['query 10'] = q10[0]
+    message['response 10'] = "{}".format(q10[1][0])
+
+    message['team_list'] = getTeamsList()
+    return render_template('trivia.html', message=message, len=len(q3[1]))
+
 
