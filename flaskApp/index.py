@@ -193,6 +193,10 @@ def getAllTeamsScores():
     entry["data"] = teamScores
     entry["time_stamp"] = millis
     return entry
+def getTrivia1():
+    cursor = cnx.cursor()
+    return getTrivia1Query(cursor)
+
 def getTrivia2():
     cursor = cnx.cursor()
     return getTrivia2Query(cursor)
@@ -212,6 +216,10 @@ def getTrivia5():
 def getTrivia6():
     cursor = cnx.cursor()
     return getTrivia6Query(cursor)
+
+def getTrivia7():
+    cursor = cnx.cursor()
+    return getTrivia7Query(cursor)
 
 def getTrivia8():
     cursor = cnx.cursor()
@@ -482,7 +490,7 @@ def teamPage():
     if 'username' not in session:
         return redirect("/loginpage")
     username = session["username"]
-    
+
     teams_list = getTeamsList()
     team = "Gujarat Lions"
     roster = getPlayersOnRoster(team_year_dict[team], team)
@@ -508,7 +516,7 @@ def teamPage2():
     if 'username' not in session:
         return redirect("/loginpage")
     username = session["username"]
-    
+
     teams_list = getTeamsList()
     team = "Gujarat Lions"
     if not request.form['team_search']:
@@ -542,6 +550,10 @@ def triviaPage():
     message = {}
     message["username"] = username
 
+    q1 = getTrivia1()
+    message['query 1'] = q1[0]
+    message['response 1'] = q1[1]
+
     q2 = getTrivia2()
     message['query 2'] = q2[0]
     message['response 2'] = "{}%".format(q2[1][0])
@@ -565,6 +577,10 @@ def triviaPage():
     q6 = getTrivia6()
     message['query 6'] = q6[0]
     message['response 6'] = "{}".format(q6[1][0])
+
+    q7 = getTrivia7()
+    message['query 7'] = q7[0]
+    message['response 7'] = q7[1]
 
     q8 = getTrivia8()
     message['query 8'] = q8[0]
