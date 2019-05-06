@@ -157,6 +157,10 @@ def getRandomQueries(team):
 	# query2 = getTeamRandomQuery(cursor, team, 3)
 	return (query1, query2)
 
+def getTrivia1():
+	cursor = cnx.cursor()
+	return getTrivia1Query(cursor)
+
 def getTrivia2():
 	cursor = cnx.cursor()
 	return getTrivia2Query(cursor)
@@ -389,6 +393,10 @@ def teamPage2():
 @app.route("/trivia")
 def triviaPage():
 	message = {}
+
+	q1 = getTrivia1()
+	message['query 1'] = q1[0]
+	message['response 1'] = q1[1]
 
 	q2 = getTrivia2()
 	message['query 2'] = q2[0]
