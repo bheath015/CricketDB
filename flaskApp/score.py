@@ -6,7 +6,7 @@ REDIS_KEY = "SCORES"
 REDIS_KEY_BAT = "BAT_SCORES"
 REDIS_KEY_BOWL = "BOWL_SCORES"
 
-CACHE_REFRESH = 5000000*1000
+CACHE_REFRESH = 10000000*1000
 
 import redis
 r = redis.Redis(host='ec2-52-205-35-60.compute-1.amazonaws.com', port=6379, db=0)
