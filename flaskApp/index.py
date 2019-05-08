@@ -13,7 +13,7 @@ import pymongo
 from score import *
 import time
 
-myclient = pymongo.MongoClient("mongodb://ec2-52-205-35-60.compute-1.amazonaws.com:27017/")
+myclient = pymongo.MongoClient("mongodb://54.144.60.49:6677/")
 mydb = myclient["cricket"]
 mycol = mydb["player"]
 
