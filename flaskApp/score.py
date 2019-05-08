@@ -121,7 +121,7 @@ def score_func():
     from bs4 import BeautifulSoup
     from pymongo import MongoClient
 
-    mongoClient = MongoClient ('ec2-52-205-35-60.compute-1.amazonaws.com:27017')
+    mongoClient = MongoClient ('mongodb://54.144.60.49:6677/')
 
     db = mongoClient.cricket
 
@@ -230,7 +230,7 @@ def score_func_batscore():
     from pymongo import MongoClient
     import math
 
-    mongoClient = MongoClient ('ec2-52-205-35-60.compute-1.amazonaws.com:27017')
+    mongoClient = MongoClient ('mongodb://54.144.60.49:6677/')
 
     db = mongoClient.cricket
 
@@ -274,7 +274,7 @@ def score_func_bowlscore():
     from pymongo import MongoClient
     import math
 
-    mongoClient = MongoClient ('ec2-52-205-35-60.compute-1.amazonaws.com:27017')
+    mongoClient = MongoClient ('mongodb://54.144.60.49:6677/')
 
     db = mongoClient.cricket
 
